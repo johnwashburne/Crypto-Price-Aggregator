@@ -7,6 +7,7 @@ import (
 	"log"
 
 	"github.com/gorilla/websocket"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
 )
 
 // message method for heartbeat response
@@ -15,37 +16,42 @@ const heartbeatRequestMethod = "public/respond-heartbeat"
 type CryptoCom struct {
 	Updates chan MarketUpdate
 	url     string
+	name    string
+	symbol  string
 }
 
 // create new Crypto.com struct
-func NewCryptoCom(url string) *CryptoCom {
-	c := make(chan MarketUpdate, 100)
+func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
+	c := make(chan MarketUpdate, updateBufSize)
 
 	return &CryptoCom{
 		Updates: c,
-		url:     url,
+		url:     "wss://uat-stream.3ona.co/v2/market",
+		name:    "Crypto.com",
+		symbol:  pair.CryptoCom,
 	}
 }
 
 // Receive book data from Crypto.com, send any top of book updates
 // over the Updates channel as a MarketUpdate struct
-func (c *CryptoCom) Recv() error {
+func (c *CryptoCom) Recv() {
 	log.Printf("Connecting to %s\n", c.url)
 	conn, _, err := websocket.DefaultDialer.Dial(c.url, nil)
 	if err != nil {
-		return err
+		log.Println("Could not connect to Crypto.com")
+		return
 	}
 	defer conn.Close()
 
-	subscriptionMessage, err := buildSubscription("BTCUSD-PERP")
+	subscriptionMessage, err := buildCryptoComSubscription(c.symbol)
 	conn.WriteMessage(websocket.TextMessage, subscriptionMessage)
 	lastUpdate := MarketUpdate{}
 
 	for {
 		_, raw_msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Fatal(err)
-			return err
+			log.Println("Crypto.com:", err)
+			continue
 		}
 
 		var jsonMap map[string]any
@@ -58,16 +64,19 @@ func (c *CryptoCom) Recv() error {
 			json.Unmarshal(raw_msg, &h)
 			b, err := buildCryptoComHeartbeat(h.Id)
 			if err != nil {
-				return err
+				log.Println("Crypto.com heartbeat:", err)
+				continue
 			}
 			conn.WriteMessage(websocket.TextMessage, b)
 		} else if jsonMap["method"] == "subscribe" {
 			var bookMsg cryptoComBookMsg
 			json.Unmarshal(raw_msg, &bookMsg)
 
-			update, err := parseBookData(&bookMsg)
+			update, err := parseCryptoComBookData(&bookMsg)
 			if err != nil {
-				log.Println(err)
+				// length of bid/ask is zero
+				// so continue without update
+				continue
 			}
 
 			if update != lastUpdate {
@@ -82,11 +91,13 @@ func (c *CryptoCom) Recv() error {
 
 // Name of data source
 func (c *CryptoCom) Name() string {
-	return "Gemini"
+	return c.name
 }
 
-func parseBookData(c *cryptoComBookMsg) (MarketUpdate, error) {
-	if len(c.Result.Data) == 0 {
+// parse a Crypto.com book websocket message into our market update object
+// best bid and ask, as well as volume for both
+func parseCryptoComBookData(c *cryptoComBookMsg) (MarketUpdate, error) {
+	if len(c.Result.Data) == 0 || len(c.Result.Data[0].Asks) == 0 || len(c.Result.Data[0].Asks) == 0 {
 		return MarketUpdate{}, errors.New("no data")
 	}
 	askSlice := c.Result.Data[0].Asks
@@ -110,6 +121,7 @@ func parseBookData(c *cryptoComBookMsg) (MarketUpdate, error) {
 	}, nil
 }
 
+// Build the heatbeat response required by Crypto.com
 func buildCryptoComHeartbeat(id int) ([]byte, error) {
 	response := cryptoComHeartbeat{id, heartbeatRequestMethod}
 	b, err := json.Marshal(response)
@@ -120,7 +132,8 @@ func buildCryptoComHeartbeat(id int) ([]byte, error) {
 	return b, nil
 }
 
-func buildSubscription(symbol string) ([]byte, error) {
+// Build the byte message payload for subscribing to a certain symbol's book data
+func buildCryptoComSubscription(symbol string) ([]byte, error) {
 	params := make(map[string][]string)
 	c := make([]string, 1)
 	c[0] = fmt.Sprintf("book.%s", symbol)

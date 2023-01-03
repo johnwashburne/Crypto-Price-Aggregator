@@ -2,23 +2,29 @@ package exchange
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	"github.com/gorilla/websocket"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
 )
 
 type Gemini struct {
 	Updates chan MarketUpdate
 	url     string
+	name    string
+	symbol  string
 }
 
 // Create new Gemini struct
-func NewGemini(url string) *Gemini {
-	c := make(chan MarketUpdate, 100)
+func NewGemini(pair symbol.CurrencyPair) *Gemini {
+	c := make(chan MarketUpdate, updateBufSize)
 
 	return &Gemini{
 		Updates: c,
-		url:     url,
+		url:     fmt.Sprintf("wss://api.gemini.com/v1/marketdata/%s?top_of_book=true", pair.Gemini),
+		name:    "Gemini",
+		symbol:  pair.Gemini,
 	}
 }
 
@@ -39,8 +45,8 @@ func (g *Gemini) Recv() error {
 	for {
 		_, raw_msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Println(err)
-			return err
+			log.Println("Gemini:", err)
+			continue
 		}
 
 		msg := geminiMessage{}
@@ -64,7 +70,7 @@ func (g *Gemini) Recv() error {
 
 // Name of data source
 func (g *Gemini) Name() string {
-	return "Gemini"
+	return g.name
 }
 
 // Struct to represent Gemini json message

@@ -6,6 +6,8 @@ import (
 	"strconv"
 )
 
+const updateBufSize = 100
+
 type Exchange interface {
 	Recv() error
 	Name() string
@@ -19,6 +21,7 @@ type MarketUpdate struct {
 }
 
 func stringMultiply(s1 string, s2 string) string {
+	// need to create more efficient process
 	f1, err := strconv.ParseFloat(s1, 64)
 	if err != nil {
 		log.Panicln("could not convert string to float")

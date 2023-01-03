@@ -1,4 +1,4 @@
-module github.com/johnwashburne/crypto-arbitrage-go
+module github.com/johnwashburne/Crypto-Price-Aggregator
 
 go 1.19
 
