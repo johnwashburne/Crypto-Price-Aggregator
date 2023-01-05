@@ -2,7 +2,6 @@ package exchange
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 
@@ -38,53 +37,57 @@ func (c *CryptoCom) Recv() {
 	log.Printf("%s - Connecting to %s\n", c.name, c.url)
 	conn, _, err := websocket.DefaultDialer.Dial(c.url, nil)
 	if err != nil {
-		log.Println("Could not connect to Crypto.com")
+		log.Println("Could not connect to", c.name)
 		return
 	}
 	defer conn.Close()
 
-	subscriptionMessage, _ := buildCryptoComSubscription(c.symbol)
-	conn.WriteMessage(websocket.TextMessage, subscriptionMessage)
-	lastUpdate := MarketUpdate{}
+	// subscribe to book data
+	subscriptionMessage := buildCryptoComSubscription(c.symbol)
+	conn.WriteJSON(subscriptionMessage)
 
+	// receive subscription verification
+	_, raw_msg, err := conn.ReadMessage()
+	if err != nil {
+		log.Println(c.name, err)
+		return
+	}
+	var resp cryptoComSubscriptionResponse
+	json.Unmarshal(raw_msg, &resp)
+	// TODO: subscription verification
+
+	lastUpdate := MarketUpdate{}
 	for {
 		_, raw_msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("Crypto.com:", err)
+			log.Println(c.name, err)
 			continue
 		}
 
 		var jsonMap map[string]any
 		json.Unmarshal(raw_msg, &jsonMap)
 
-		// Crypto.com requires a heartbeat message response every
-		// 	 30 seconds to keep websocket connection alive
 		if jsonMap["method"] == "public/heartbeat" {
+			// Crypto.com requires a heartbeat message response every
+			// 	 30 seconds to keep websocket connection alive
 			var h cryptoComHeartbeat
 			json.Unmarshal(raw_msg, &h)
-			b, err := buildCryptoComHeartbeat(h.Id)
-			if err != nil {
-				log.Println("Crypto.com heartbeat:", err)
-				continue
-			}
-			conn.WriteMessage(websocket.TextMessage, b)
+			conn.WriteJSON(cryptoComHeartbeat{
+				Id:     h.Id,
+				Method: heartbeatRequestMethod,
+			})
 		} else if jsonMap["method"] == "subscribe" {
 			var bookMsg cryptoComBookMsg
 			json.Unmarshal(raw_msg, &bookMsg)
 
-			update, err := parseCryptoComBookData(&bookMsg)
-			if err != nil {
-				// length of bid/ask is zero
-				// so continue without update
-				continue
-			}
-
+			update := parseCryptoComBookData(&bookMsg)
 			if update != lastUpdate {
 				c.Updates <- update
 			}
+
 			lastUpdate = update
 		} else {
-			log.Panic("unidentified message", jsonMap["method"])
+			log.Println(c.name, "unidentified message:", jsonMap["method"])
 		}
 	}
 }
@@ -96,11 +99,7 @@ func (c *CryptoCom) Name() string {
 
 // parse a Crypto.com book websocket message into our market update object
 // best bid and ask, as well as volume for both
-func parseCryptoComBookData(c *cryptoComBookMsg) (MarketUpdate, error) {
-	if len(c.Result.Data) == 0 {
-		return MarketUpdate{}, errors.New("no data")
-	}
-
+func parseCryptoComBookData(c *cryptoComBookMsg) MarketUpdate {
 	var ask string
 	var askSize string
 	if len(c.Result.Data[0].Asks) != 0 {
@@ -122,37 +121,21 @@ func parseCryptoComBookData(c *cryptoComBookMsg) (MarketUpdate, error) {
 		AskVolume: askSize,
 		Bid:       bid,
 		BidVolume: bidSize,
-	}, nil
-}
-
-// Build the heatbeat response required by Crypto.com
-func buildCryptoComHeartbeat(id int) ([]byte, error) {
-	response := cryptoComHeartbeat{id, heartbeatRequestMethod}
-	b, err := json.Marshal(response)
-	if err != nil {
-		return nil, err
 	}
-
-	return b, nil
 }
 
 // Build the byte message payload for subscribing to a certain symbol's book data
-func buildCryptoComSubscription(symbol string) ([]byte, error) {
-	params := make(map[string][]string)
-	c := make([]string, 1)
-	c[0] = fmt.Sprintf("book.%s", symbol)
-	params["channels"] = c
-	response := subscription{
+func buildCryptoComSubscription(symbol string) subscription {
+	c := []string{fmt.Sprintf("book.%s", symbol)}
+	params := map[string][]string{
+		"channels": c,
+	}
+
+	return subscription{
 		Id:     1,
 		Method: "subscribe",
 		Params: params,
 	}
-	b, err := json.Marshal(response)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
 }
 
 // Models
@@ -166,6 +149,13 @@ type subscription struct {
 	Id     int                 `json:"id"`
 	Method string              `json:"method"`
 	Params map[string][]string `json:"params"`
+}
+
+type cryptoComSubscriptionResponse struct {
+	Id      int    `json:"id"`
+	Code    int    `json:"code"`
+	Method  string `json:"method"`
+	Channel string `json:"channel"`
 }
 
 type cryptoComBookMsg struct {

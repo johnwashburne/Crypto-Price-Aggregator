@@ -9,7 +9,7 @@ import (
 const updateBufSize = 100
 
 type Exchange interface {
-	Recv() error
+	Recv()
 	Name() string
 }
 

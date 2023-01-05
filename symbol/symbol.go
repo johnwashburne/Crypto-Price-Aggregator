@@ -13,6 +13,7 @@ type SymbolManager interface {
 type CurrencyPair struct {
 	Gemini    string `json:"Gemini"`
 	CryptoCom string `json:"Crypto.com"`
+	Coinbase  string `json:"Coinbase"`
 }
 
 type JsonManager struct {

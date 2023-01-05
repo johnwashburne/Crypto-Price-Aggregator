@@ -22,16 +22,20 @@ func main() {
 	pair := symbolManager.GetCurrencyPair("BTC", "USD")
 	gemini := exchange.NewGemini(pair)
 	cryptoCom := exchange.NewCryptoCom(pair)
+	coinbase := exchange.NewCoinbase(pair)
 
 	go gemini.Recv()
 	go cryptoCom.Recv()
+	go coinbase.Recv()
 
 	for {
 		select {
-		case c := <-cryptoCom.Updates:
-			log.Printf("CC Bid: %s @ %s, Ask: %s @ %s", c.BidVolume, c.Bid, c.AskVolume, c.Ask)
+		case cc := <-cryptoCom.Updates:
+			log.Printf("CC Bid: %s @ %s, Ask: %s @ %s", cc.BidVolume, cc.Bid, cc.AskVolume, cc.Ask)
 		case g := <-gemini.Updates:
 			log.Printf("G Bid: %s @ %s, Ask: %s @ %s", g.BidVolume, g.Bid, g.AskVolume, g.Ask)
+		case cb := <-coinbase.Updates:
+			log.Printf("CB Bid: %s @ %s, Ask %s @ %s", cb.BidVolume, cb.Bid, cb.AskVolume, cb.Ask)
 		case <-interrupt:
 			return
 		}

@@ -30,11 +30,11 @@ func NewGemini(pair symbol.CurrencyPair) *Gemini {
 
 // Receive book data from Gemini, send any top of book updates
 // over the Updates channel as a MarketUpdate struct
-func (g *Gemini) Recv() error {
+func (g *Gemini) Recv() {
 	log.Printf("%s - Connecting to %s\n", g.name, g.url)
 	conn, _, err := websocket.DefaultDialer.Dial(g.url, nil)
 	if err != nil {
-		return err
+		log.Println("Could not connect to ", g.name)
 	}
 	defer conn.Close()
 
@@ -45,7 +45,7 @@ func (g *Gemini) Recv() error {
 	for {
 		_, raw_msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Println("Gemini:", err)
+			log.Println(g.name, err)
 			continue
 		}
 

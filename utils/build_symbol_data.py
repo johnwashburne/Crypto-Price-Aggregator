@@ -3,53 +3,88 @@
 import requests
 from typing import List
 import json
+from tqdm import tqdm
 
-def get_gemini_symbols() -> List[dict]:
+
+class Symbol:
+
+    def __init__(self, symbol, base_currency, quote_currency):
+        self.symbol = symbol
+        self.base_currency = base_currency
+        self.quote_currency = quote_currency
+
+
+def get_gemini_symbols() -> List[Symbol]:
     response = requests.get("https://api.gemini.com/v1/symbols")
-    symbols = response.json()
-    
+    instruments = response.json()
+
     res = []
 
-    for symbol in symbols:
-        response = requests.get(f"https://api.gemini.com/v1/symbols/details/{symbol}").json()
-        item = {}
-        item['symbol'] = response['symbol']
-        item['base_currency'] = response['base_currency']
-        item['quote_currency'] = response['quote_currency']
-        res.append(item)
+    for instrument in tqdm(instruments):
+        response = requests.get(
+            f"https://api.gemini.com/v1/symbols/details/{instrument}"
+        ).json()
+
+        res.append(Symbol(
+            response['symbol'],
+            response['base_currency'],
+            response['quote_currency']
+        ))
 
     return res
 
-def get_crypto_com_symbols() -> List[dict]:
+def get_crypto_com_symbols() -> List[Symbol]:
     response = requests.get("https://api.crypto.com/v2/public/get-instruments")
 
     res = []
 
-    for instrument in response.json()['result']['instruments']:
-        item = {}
-        item['symbol'] = instrument['instrument_name']
-        item['base_currency'] = instrument['base_currency']
-        item['quote_currency'] = instrument['quote_currency']
-        res.append(item)
+    for instrument in tqdm(response.json()['result']['instruments']):
+        res.append(Symbol(
+            instrument['instrument_name'],
+            instrument['base_currency'],
+            instrument['quote_currency']
+        ))
 
     return res
-    
-def add_symbols(curr_symbols: dict, new_symbols: List[dict], name: str) -> dict:
+
+def get_coinbase_symbols() -> List[Symbol]:
+    response = requests.get("https://api.exchange.coinbase.com/products/")
+
+    res = []
+
+    for instrument in tqdm(response.json()):
+        res.append(Symbol(
+            instrument['id'],
+            instrument['base_currency'],
+            instrument['quote_currency']
+        ))
+
+    return res
+
+def add_symbols(
+        curr_symbols: dict, 
+        new_symbols: List[Symbol], 
+        name: str) -> dict:
+
     for s in new_symbols:
-        if s['base_currency'] not in curr_symbols.keys():
-            curr_symbols[s['base_currency']] = {}
+        if s.base_currency not in curr_symbols.keys():
+            curr_symbols[s.base_currency] = {}
 
-        if s['quote_currency'] not in curr_symbols[s['base_currency']].keys():
-            curr_symbols[s['base_currency']][s['quote_currency']] = {}
+        if s.quote_currency not in curr_symbols[s.base_currency].keys():
+            curr_symbols[s.base_currency][s.quote_currency] = {}
 
-        curr_symbols[s['base_currency']][s['quote_currency']][name] = s['symbol']
+        curr_symbols[s.base_currency][s.quote_currency][name] = s.symbol
 
     return curr_symbols
 
+
 if __name__ == "__main__":
+    
     symbols = {}
+
     add_symbols(symbols, get_gemini_symbols(), "Gemini")
     add_symbols(symbols, get_crypto_com_symbols(), "Crypto.com")
+    add_symbols(symbols, get_coinbase_symbols(), "Coinbase")
+
     with open("../symbol/symbol_database.json", 'w') as f:
         json.dump(symbols, f)
-
