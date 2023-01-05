@@ -97,21 +97,25 @@ func (c *CryptoCom) Name() string {
 // parse a Crypto.com book websocket message into our market update object
 // best bid and ask, as well as volume for both
 func parseCryptoComBookData(c *cryptoComBookMsg) (MarketUpdate, error) {
-	if len(c.Result.Data) == 0 || len(c.Result.Data[0].Asks) == 0 || len(c.Result.Data[0].Asks) == 0 {
+	if len(c.Result.Data) == 0 {
 		return MarketUpdate{}, errors.New("no data")
 	}
-	askSlice := c.Result.Data[0].Asks
-	bidSlice := c.Result.Data[0].Bids
 
 	var ask string
 	var askSize string
-	ask = askSlice[0][0]
-	askSize = stringMultiply(askSlice[0][1], askSlice[0][2])
+	if len(c.Result.Data[0].Asks) != 0 {
+		askSlice := c.Result.Data[0].Asks
+		ask = askSlice[0][0]
+		askSize = stringMultiply(askSlice[0][1], askSlice[0][2])
+	}
 
 	var bid string
 	var bidSize string
-	bid = bidSlice[0][0]
-	bidSize = stringMultiply(bidSlice[0][1], bidSlice[0][2])
+	if len(c.Result.Data[0].Bids) != 0 {
+		bidSlice := c.Result.Data[0].Bids
+		bid = bidSlice[0][0]
+		bidSize = stringMultiply(bidSlice[0][1], bidSlice[0][2])
+	}
 
 	return MarketUpdate{
 		Ask:       ask,
@@ -150,6 +154,8 @@ func buildCryptoComSubscription(symbol string) ([]byte, error) {
 
 	return b, nil
 }
+
+// Models
 
 type cryptoComHeartbeat struct {
 	Id     int    `json:"id"`

@@ -13,11 +13,13 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	pair := symbol.CurrencyPair{
-		Gemini:    "BTCUSD",
-		CryptoCom: "BTC_USDT",
+	symbolManager, err := symbol.LoadData()
+	if err != nil {
+		log.Println("Could not load symbol manager:", err)
+		return
 	}
 
+	pair := symbolManager.GetCurrencyPair("BTC", "USD")
 	gemini := exchange.NewGemini(pair)
 	cryptoCom := exchange.NewCryptoCom(pair)
 
