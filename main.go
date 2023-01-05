@@ -13,7 +13,7 @@ func main() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	symbolManager, err := symbol.LoadData()
+	symbolManager, err := symbol.LoadJsonSymbolData()
 	if err != nil {
 		log.Println("Could not load symbol manager:", err)
 		return

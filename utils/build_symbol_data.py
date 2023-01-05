@@ -1,4 +1,4 @@
-# python util file for building symbol database
+# python util file for building json symbol database
 
 import requests
 from typing import List

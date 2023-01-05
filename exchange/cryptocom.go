@@ -27,7 +27,7 @@ func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
 	return &CryptoCom{
 		Updates: c,
 		url:     "wss://uat-stream.3ona.co/v2/market",
-		name:    "Crypto.com",
+		name:    fmt.Sprintf("Crypto.com: %s", pair.CryptoCom),
 		symbol:  pair.CryptoCom,
 	}
 }
@@ -35,7 +35,7 @@ func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
 // Receive book data from Crypto.com, send any top of book updates
 // over the Updates channel as a MarketUpdate struct
 func (c *CryptoCom) Recv() {
-	log.Printf("Connecting to %s\n", c.url)
+	log.Printf("%s - Connecting to %s\n", c.name, c.url)
 	conn, _, err := websocket.DefaultDialer.Dial(c.url, nil)
 	if err != nil {
 		log.Println("Could not connect to Crypto.com")
@@ -43,7 +43,7 @@ func (c *CryptoCom) Recv() {
 	}
 	defer conn.Close()
 
-	subscriptionMessage, err := buildCryptoComSubscription(c.symbol)
+	subscriptionMessage, _ := buildCryptoComSubscription(c.symbol)
 	conn.WriteMessage(websocket.TextMessage, subscriptionMessage)
 	lastUpdate := MarketUpdate{}
 

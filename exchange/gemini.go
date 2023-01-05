@@ -23,7 +23,7 @@ func NewGemini(pair symbol.CurrencyPair) *Gemini {
 	return &Gemini{
 		Updates: c,
 		url:     fmt.Sprintf("wss://api.gemini.com/v1/marketdata/%s?top_of_book=true", pair.Gemini),
-		name:    "Gemini",
+		name:    fmt.Sprintf("Gemini: %s", pair.Gemini),
 		symbol:  pair.Gemini,
 	}
 }
@@ -31,7 +31,7 @@ func NewGemini(pair symbol.CurrencyPair) *Gemini {
 // Receive book data from Gemini, send any top of book updates
 // over the Updates channel as a MarketUpdate struct
 func (g *Gemini) Recv() error {
-	log.Printf("Connecting to %s\n", g.url)
+	log.Printf("%s - Connecting to %s\n", g.name, g.url)
 	conn, _, err := websocket.DefaultDialer.Dial(g.url, nil)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (g *Gemini) Recv() error {
 		}
 
 		msg := geminiMessage{}
-		err = json.Unmarshal([]byte(raw_msg), &msg)
+		json.Unmarshal([]byte(raw_msg), &msg)
 
 		for _, e := range msg.Events {
 			if e.Side == "bid" {
