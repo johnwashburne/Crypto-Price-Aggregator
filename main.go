@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/johnwashburne/Crypto-Price-Aggregator/aggregator"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/exchange"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
 )
@@ -20,22 +21,18 @@ func main() {
 	}
 
 	pair := symbolManager.GetCurrencyPair("BTC", "USD")
-	gemini := exchange.NewGemini(pair)
-	cryptoCom := exchange.NewCryptoCom(pair)
-	coinbase := exchange.NewCoinbase(pair)
+	agg := aggregator.New(
+		exchange.NewGemini(pair),
+		exchange.NewCryptoCom(pair),
+		exchange.NewCoinbase(pair),
+	)
 
-	go gemini.Recv()
-	go cryptoCom.Recv()
-	go coinbase.Recv()
+	go agg.Recv()
 
 	for {
 		select {
-		case cc := <-cryptoCom.Updates:
-			log.Printf("CC Bid: %s @ %s, Ask: %s @ %s", cc.BidVolume, cc.Bid, cc.AskVolume, cc.Ask)
-		case g := <-gemini.Updates:
-			log.Printf("G Bid: %s @ %s, Ask: %s @ %s", g.BidVolume, g.Bid, g.AskVolume, g.Ask)
-		case cb := <-coinbase.Updates:
-			log.Printf("CB Bid: %s @ %s, Ask %s @ %s", cb.BidVolume, cb.Bid, cb.AskVolume, cb.Ask)
+		case msg := <-agg.Updates:
+			log.Println(msg.Bid, msg.BidPlatform, msg.Ask, msg.AskPlatform)
 		case <-interrupt:
 			return
 		}

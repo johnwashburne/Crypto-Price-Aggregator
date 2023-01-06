@@ -10,7 +10,7 @@ import (
 )
 
 type Gemini struct {
-	Updates chan MarketUpdate
+	updates chan MarketUpdate
 	url     string
 	name    string
 	symbol  string
@@ -21,7 +21,7 @@ func NewGemini(pair symbol.CurrencyPair) *Gemini {
 	c := make(chan MarketUpdate, updateBufSize)
 
 	return &Gemini{
-		Updates: c,
+		updates: c,
 		url:     fmt.Sprintf("wss://api.gemini.com/v1/marketdata/%s?top_of_book=true", pair.Gemini),
 		name:    fmt.Sprintf("Gemini: %s", pair.Gemini),
 		symbol:  pair.Gemini,
@@ -29,7 +29,7 @@ func NewGemini(pair symbol.CurrencyPair) *Gemini {
 }
 
 // Receive book data from Gemini, send any top of book updates
-// over the Updates channel as a MarketUpdate struct
+// over the updates channel as a MarketUpdate struct
 func (g *Gemini) Recv() {
 	log.Printf("%s - Connecting to %s\n", g.name, g.url)
 	conn, _, err := websocket.DefaultDialer.Dial(g.url, nil)
@@ -39,9 +39,9 @@ func (g *Gemini) Recv() {
 	defer conn.Close()
 
 	var ask string
-	var askVol string
+	var askSize string
 	var bid string
-	var bidVol string
+	var bidSize string
 	for {
 		_, raw_msg, err := conn.ReadMessage()
 		if err != nil {
@@ -55,22 +55,31 @@ func (g *Gemini) Recv() {
 		for _, e := range msg.Events {
 			if e.Side == "bid" {
 				bid = e.Price
-				bidVol = e.Remaining
+				bidSize = e.Remaining
 			}
 			if e.Side == "ask" {
 				ask = e.Price
-				askVol = e.Remaining
+				askSize = e.Remaining
 			}
 		}
 
-		update := MarketUpdate{bid, ask, bidVol, askVol}
-		g.Updates <- update
+		g.updates <- MarketUpdate{
+			Ask:     ask,
+			AskSize: askSize,
+			Bid:     bid,
+			BidSize: bidSize,
+			Name:    g.name,
+		}
 	}
 }
 
 // Name of data source
 func (g *Gemini) Name() string {
 	return g.name
+}
+
+func (g *Gemini) Updates() chan MarketUpdate {
+	return g.updates
 }
 
 // Struct to represent Gemini json message

@@ -10,7 +10,7 @@ import (
 )
 
 type Coinbase struct {
-	Updates chan MarketUpdate
+	updates chan MarketUpdate
 	symbol  string
 	name    string
 	url     string
@@ -20,13 +20,15 @@ func NewCoinbase(pair symbol.CurrencyPair) *Coinbase {
 	c := make(chan MarketUpdate, updateBufSize)
 
 	return &Coinbase{
-		Updates: c,
+		updates: c,
 		symbol:  pair.Coinbase,
 		name:    fmt.Sprintf("Coinbase: %s", pair.Coinbase),
 		url:     "wss://ws-feed.exchange.coinbase.com",
 	}
 }
 
+// Receive book data from Coinbase, send any top of book updates
+// over the updates channel as a MarketUpdate struct
 func (c *Coinbase) Recv() {
 	// connect to websocket
 	log.Printf("%s - Connecting to %s\n", c.name, c.url)
@@ -64,17 +66,24 @@ func (c *Coinbase) Recv() {
 		var msg coinbaseMessage
 		json.Unmarshal(raw_msg, &msg)
 
-		c.Updates <- MarketUpdate{
-			Bid:       msg.BestBid,
-			BidVolume: msg.BestBidSize,
-			Ask:       msg.BestAsk,
-			AskVolume: msg.BestAskSize,
+		c.updates <- MarketUpdate{
+			Ask:     msg.BestAsk,
+			AskSize: msg.BestAskSize,
+			Bid:     msg.BestBid,
+			BidSize: msg.BestBidSize,
+			Name:    c.name,
 		}
 	}
 }
 
+// Name of data source
 func (c *Coinbase) Name() string {
 	return c.name
+}
+
+// Access to update channel
+func (c *Coinbase) Updates() chan MarketUpdate {
+	return c.updates
 }
 
 type coinbaseRequest struct {

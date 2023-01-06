@@ -13,7 +13,7 @@ import (
 const heartbeatRequestMethod = "public/respond-heartbeat"
 
 type CryptoCom struct {
-	Updates chan MarketUpdate
+	updates chan MarketUpdate
 	url     string
 	name    string
 	symbol  string
@@ -24,7 +24,7 @@ func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
 	c := make(chan MarketUpdate, updateBufSize)
 
 	return &CryptoCom{
-		Updates: c,
+		updates: c,
 		url:     "wss://uat-stream.3ona.co/v2/market",
 		name:    fmt.Sprintf("Crypto.com: %s", pair.CryptoCom),
 		symbol:  pair.CryptoCom,
@@ -32,7 +32,7 @@ func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
 }
 
 // Receive book data from Crypto.com, send any top of book updates
-// over the Updates channel as a MarketUpdate struct
+// over the updates channel as a MarketUpdate struct
 func (c *CryptoCom) Recv() {
 	log.Printf("%s - Connecting to %s\n", c.name, c.url)
 	conn, _, err := websocket.DefaultDialer.Dial(c.url, nil)
@@ -81,8 +81,9 @@ func (c *CryptoCom) Recv() {
 			json.Unmarshal(raw_msg, &bookMsg)
 
 			update := parseCryptoComBookData(&bookMsg)
+			update.Name = c.name
 			if update != lastUpdate {
-				c.Updates <- update
+				c.updates <- update
 			}
 
 			lastUpdate = update
@@ -95,6 +96,11 @@ func (c *CryptoCom) Recv() {
 // Name of data source
 func (c *CryptoCom) Name() string {
 	return c.name
+}
+
+// Access to update channel
+func (c *CryptoCom) Updates() chan MarketUpdate {
+	return c.updates
 }
 
 // parse a Crypto.com book websocket message into our market update object
@@ -117,10 +123,10 @@ func parseCryptoComBookData(c *cryptoComBookMsg) MarketUpdate {
 	}
 
 	return MarketUpdate{
-		Ask:       ask,
-		AskVolume: askSize,
-		Bid:       bid,
-		BidVolume: bidSize,
+		Ask:     ask,
+		AskSize: askSize,
+		Bid:     bid,
+		BidSize: bidSize,
 	}
 }
 

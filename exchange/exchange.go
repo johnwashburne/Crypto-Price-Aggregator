@@ -10,14 +10,15 @@ const updateBufSize = 100
 
 type Exchange interface {
 	Recv()
-	Name() string
+	Updates() chan MarketUpdate
 }
 
 type MarketUpdate struct {
-	Bid       string
-	Ask       string
-	BidVolume string
-	AskVolume string
+	Bid     string
+	Ask     string
+	BidSize string
+	AskSize string
+	Name    string
 }
 
 func stringMultiply(s1 string, s2 string) string {
