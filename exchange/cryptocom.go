@@ -17,6 +17,7 @@ type CryptoCom struct {
 	url     string
 	name    string
 	symbol  string
+	valid   bool
 }
 
 // create new Crypto.com struct
@@ -25,42 +26,38 @@ func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
 
 	return &CryptoCom{
 		updates: c,
-		url:     "wss://uat-stream.3ona.co/v2/market",
+		url:     "wss://stream.crypto.com/exchange/v1/market",
 		name:    fmt.Sprintf("Crypto.com: %s", pair.CryptoCom),
 		symbol:  pair.CryptoCom,
+		valid:   pair.CryptoCom != "",
 	}
 }
 
 // Receive book data from Crypto.com, send any top of book updates
 // over the updates channel as a MarketUpdate struct
-func (c *CryptoCom) Recv() {
-	log.Printf("%s - Connecting to %s\n", c.name, c.url)
-	conn, _, err := websocket.DefaultDialer.Dial(c.url, nil)
+func (e *CryptoCom) Recv() {
+	log.Printf("%s - Connecting to %s\n", e.name, e.url)
+	conn, _, err := websocket.DefaultDialer.Dial(e.url, nil)
 	if err != nil {
-		log.Println("Could not connect to", c.name)
+		log.Println("Could not connect to", e.name)
 		return
 	}
 	defer conn.Close()
 
 	// subscribe to book data
-	subscriptionMessage := buildCryptoComSubscription(c.symbol)
+	subscriptionMessage := buildCryptoComSubscription(e.symbol)
 	conn.WriteJSON(subscriptionMessage)
 
 	// receive subscription verification
-	_, raw_msg, err := conn.ReadMessage()
-	if err != nil {
-		log.Println(c.name, err)
-		return
-	}
 	var resp cryptoComSubscriptionResponse
-	json.Unmarshal(raw_msg, &resp)
-	// TODO: subscription verification
+	conn.ReadJSON(&resp)
+	// TODO: subscription verification, error handling
 
 	lastUpdate := MarketUpdate{}
 	for {
 		_, raw_msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Println(c.name, err)
+			log.Println(e.name, err)
 			continue
 		}
 
@@ -81,26 +78,30 @@ func (c *CryptoCom) Recv() {
 			json.Unmarshal(raw_msg, &bookMsg)
 
 			update := parseCryptoComBookData(&bookMsg)
-			update.Name = c.name
+			update.Name = e.name
 			if update != lastUpdate {
-				c.updates <- update
+				e.updates <- update
 			}
 
 			lastUpdate = update
 		} else {
-			log.Println(c.name, "unidentified message:", jsonMap["method"])
+			log.Println(e.name, "unidentified message:", jsonMap["method"])
 		}
 	}
 }
 
 // Name of data source
-func (c *CryptoCom) Name() string {
-	return c.name
+func (e *CryptoCom) Name() string {
+	return e.name
 }
 
 // Access to update channel
-func (c *CryptoCom) Updates() chan MarketUpdate {
-	return c.updates
+func (e *CryptoCom) Updates() chan MarketUpdate {
+	return e.updates
+}
+
+func (e *CryptoCom) Valid() bool {
+	return e.valid
 }
 
 // parse a Crypto.com book websocket message into our market update object

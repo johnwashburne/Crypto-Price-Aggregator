@@ -14,6 +14,8 @@ type CurrencyPair struct {
 	Gemini    string `json:"Gemini"`
 	CryptoCom string `json:"Crypto.com"`
 	Coinbase  string `json:"Coinbase"`
+	Kraken    string `json:"Kraken"`
+	Kucoin    string `json:"Kucoin"`
 }
 
 type JsonManager struct {

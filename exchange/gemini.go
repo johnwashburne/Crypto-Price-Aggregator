@@ -1,7 +1,6 @@
 package exchange
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -14,6 +13,7 @@ type Gemini struct {
 	url     string
 	name    string
 	symbol  string
+	valid   bool
 }
 
 // Create new Gemini struct
@@ -25,16 +25,18 @@ func NewGemini(pair symbol.CurrencyPair) *Gemini {
 		url:     fmt.Sprintf("wss://api.gemini.com/v1/marketdata/%s?top_of_book=true", pair.Gemini),
 		name:    fmt.Sprintf("Gemini: %s", pair.Gemini),
 		symbol:  pair.Gemini,
+		valid:   pair.Gemini != "",
 	}
 }
 
 // Receive book data from Gemini, send any top of book updates
 // over the updates channel as a MarketUpdate struct
-func (g *Gemini) Recv() {
-	log.Printf("%s - Connecting to %s\n", g.name, g.url)
-	conn, _, err := websocket.DefaultDialer.Dial(g.url, nil)
+func (e *Gemini) Recv() {
+	log.Printf("%s - Connecting to %s\n", e.name, e.url)
+	conn, _, err := websocket.DefaultDialer.Dial(e.url, nil)
 	if err != nil {
-		log.Println("Could not connect to ", g.name)
+		// try reconnect here
+		log.Println("Could not connect to ", e.name)
 	}
 	defer conn.Close()
 
@@ -43,43 +45,44 @@ func (g *Gemini) Recv() {
 	var bid string
 	var bidSize string
 	for {
-		_, raw_msg, err := conn.ReadMessage()
+		var message geminiMessage
+		err = conn.ReadJSON(&message)
 		if err != nil {
-			log.Println(g.name, err)
-			continue
+			log.Println(e.name, err)
 		}
 
-		msg := geminiMessage{}
-		json.Unmarshal([]byte(raw_msg), &msg)
-
-		for _, e := range msg.Events {
-			if e.Side == "bid" {
-				bid = e.Price
-				bidSize = e.Remaining
+		for _, event := range message.Events {
+			if event.Side == "bid" {
+				bid = event.Price
+				bidSize = event.Remaining
 			}
-			if e.Side == "ask" {
-				ask = e.Price
-				askSize = e.Remaining
+			if event.Side == "ask" {
+				ask = event.Price
+				askSize = event.Remaining
 			}
 		}
 
-		g.updates <- MarketUpdate{
+		e.updates <- MarketUpdate{
 			Ask:     ask,
 			AskSize: askSize,
 			Bid:     bid,
 			BidSize: bidSize,
-			Name:    g.name,
+			Name:    e.name,
 		}
 	}
 }
 
 // Name of data source
-func (g *Gemini) Name() string {
-	return g.name
+func (e *Gemini) Name() string {
+	return e.name
 }
 
-func (g *Gemini) Updates() chan MarketUpdate {
-	return g.updates
+func (e *Gemini) Updates() chan MarketUpdate {
+	return e.updates
+}
+
+func (e *Gemini) Valid() bool {
+	return e.valid
 }
 
 // Struct to represent Gemini json message

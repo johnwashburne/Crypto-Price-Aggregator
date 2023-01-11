@@ -61,6 +61,33 @@ def get_coinbase_symbols() -> List[Symbol]:
 
     return res
 
+def get_kraken_symbols() -> List[Symbol]:
+    response = requests.get("https://api.kraken.com/0/public/AssetPairs")
+    res = []
+
+    for name in tqdm(response.json()['result'].keys()):
+        instrument = response.json()['result'][name]
+        res.append(Symbol(
+            instrument['wsname'],
+            instrument['base'],
+            instrument['quote']
+        ))
+
+    return res
+
+def get_kucoin_symbols() -> List[Symbol]:
+    response = requests.get("https://api.kucoin.com/api/v2/symbols")
+    res = []
+
+    for instrument in tqdm(response.json()['data']):
+        res.append(Symbol(
+            instrument['symbol'],
+            instrument['baseCurrency'],
+            instrument['quoteCurrency']
+        ))
+
+    return res
+
 def add_symbols(
         curr_symbols: dict, 
         new_symbols: List[Symbol], 
@@ -85,6 +112,7 @@ if __name__ == "__main__":
     add_symbols(symbols, get_gemini_symbols(), "Gemini")
     add_symbols(symbols, get_crypto_com_symbols(), "Crypto.com")
     add_symbols(symbols, get_coinbase_symbols(), "Coinbase")
+    add_symbols(symbols, get_kucoin_symbols(), "Kucoin")
 
     with open("../symbol/symbol_database.json", 'w') as f:
         json.dump(symbols, f)

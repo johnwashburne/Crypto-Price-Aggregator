@@ -11,6 +11,8 @@ const updateBufSize = 100
 type Exchange interface {
 	Recv()
 	Updates() chan MarketUpdate
+	Valid() bool
+	Name() string
 }
 
 type MarketUpdate struct {

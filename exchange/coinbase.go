@@ -1,7 +1,6 @@
 package exchange
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 
@@ -14,6 +13,7 @@ type Coinbase struct {
 	symbol  string
 	name    string
 	url     string
+	valid   bool
 }
 
 func NewCoinbase(pair symbol.CurrencyPair) *Coinbase {
@@ -24,17 +24,18 @@ func NewCoinbase(pair symbol.CurrencyPair) *Coinbase {
 		symbol:  pair.Coinbase,
 		name:    fmt.Sprintf("Coinbase: %s", pair.Coinbase),
 		url:     "wss://ws-feed.exchange.coinbase.com",
+		valid:   pair.Coinbase != "",
 	}
 }
 
 // Receive book data from Coinbase, send any top of book updates
 // over the updates channel as a MarketUpdate struct
-func (c *Coinbase) Recv() {
+func (e *Coinbase) Recv() {
 	// connect to websocket
-	log.Printf("%s - Connecting to %s\n", c.name, c.url)
-	conn, _, err := websocket.DefaultDialer.Dial(c.url, nil)
+	log.Printf("%s - Connecting to %s\n", e.name, e.url)
+	conn, _, err := websocket.DefaultDialer.Dial(e.url, nil)
 	if err != nil {
-		log.Println("Could not connect to", c.name)
+		log.Println("Could not connect to", e.name)
 		return
 	}
 	defer conn.Close()
@@ -42,48 +43,45 @@ func (c *Coinbase) Recv() {
 	// subscribe to ticker channel
 	conn.WriteJSON(coinbaseRequest{
 		Type:       "subscribe",
-		ProductIds: []string{c.symbol},
+		ProductIds: []string{e.symbol},
 		Channels:   []string{"ticker"},
 	})
 
 	// confirm accurate subscription
-	_, raw_msg, err := conn.ReadMessage()
-	if err != nil {
-		log.Println(c.name, err)
-		return
-	}
 	var resp coinbaseSubscriptionResponse
-	json.Unmarshal(raw_msg, &resp)
-	// TODO: subscription verification
+	conn.ReadJSON(&resp)
+	// TODO: subscription verification, error handling
 
 	for {
-		_, raw_msg, err := conn.ReadMessage()
+		var message coinbaseMessage
+		err = conn.ReadJSON(&message)
 		if err != nil {
-			log.Println(c.name, err)
+			log.Println(e.name, err)
 			continue
 		}
 
-		var msg coinbaseMessage
-		json.Unmarshal(raw_msg, &msg)
-
-		c.updates <- MarketUpdate{
-			Ask:     msg.BestAsk,
-			AskSize: msg.BestAskSize,
-			Bid:     msg.BestBid,
-			BidSize: msg.BestBidSize,
-			Name:    c.name,
+		e.updates <- MarketUpdate{
+			Ask:     message.BestAsk,
+			AskSize: message.BestAskSize,
+			Bid:     message.BestBid,
+			BidSize: message.BestBidSize,
+			Name:    e.name,
 		}
 	}
 }
 
 // Name of data source
-func (c *Coinbase) Name() string {
-	return c.name
+func (e *Coinbase) Name() string {
+	return e.name
 }
 
 // Access to update channel
-func (c *Coinbase) Updates() chan MarketUpdate {
-	return c.updates
+func (e *Coinbase) Updates() chan MarketUpdate {
+	return e.updates
+}
+
+func (e *Coinbase) Valid() bool {
+	return e.valid
 }
 
 type coinbaseRequest struct {
