@@ -20,9 +20,7 @@ func main() {
 		return
 	}
 
-	log.Print(exchange.NewKucoin(symbolManager.GetCurrencyPair("BTC", "USD")))
-
-	pair := symbolManager.GetCurrencyPair("ETH", "BTC")
+	pair := symbolManager.GetCurrencyPair("BTC", "USD")
 	agg := aggregator.New(
 		exchange.NewGemini(pair),
 		exchange.NewCryptoCom(pair),
@@ -33,7 +31,10 @@ func main() {
 	go agg.Recv()
 	for {
 		select {
-		case msg := <-agg.Updates():
+		case msg, ok := <-agg.Updates():
+			if !ok {
+				return
+			}
 			log.Println(msg.Bid, msg.BidPlatform, msg.Ask, msg.AskPlatform)
 		case <-interrupt:
 			return

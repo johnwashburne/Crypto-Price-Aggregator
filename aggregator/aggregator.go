@@ -42,18 +42,27 @@ func (a *Aggregator) Recv() {
 	price := BestPrice{}
 	lastPrice := BestPrice{}
 
+	validExchange := false // flag to ensure there is at least 1 valid exchange
 	for _, exch := range a.exchanges {
 		if !exch.Valid() {
 			log.Println(exch.Name(), "not valid, cannot connect")
 			continue
 		}
 
+		validExchange = true
 		go exch.Recv()
 		go func(c chan exchange.MarketUpdate) {
 			for msg := range c {
 				agg <- msg
 			}
 		}(exch.Updates())
+	}
+
+	if !validExchange {
+		log.Println("No valid exchange connections")
+		close(agg)
+		close(a.updates)
+		return
 	}
 
 	for msg := range agg {
