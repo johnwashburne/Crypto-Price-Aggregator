@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gorilla/websocket"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
 )
 
 type Coinbase struct {
@@ -33,12 +33,12 @@ func NewCoinbase(pair symbol.CurrencyPair) *Coinbase {
 func (e *Coinbase) Recv() {
 	// connect to websocket
 	log.Printf("%s - Connecting to %s\n", e.name, e.url)
-	conn, _, err := websocket.DefaultDialer.Dial(e.url, nil)
+	conn := ws.New(e.url)
+	err := conn.Connect()
 	if err != nil {
 		log.Println("Could not connect to", e.name)
 		return
 	}
-	defer conn.Close()
 
 	// subscribe to ticker channel
 	conn.WriteJSON(coinbaseRequest{

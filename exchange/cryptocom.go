@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gorilla/websocket"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
 )
 
 // message method for heartbeat response
@@ -37,12 +37,12 @@ func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
 // over the updates channel as a MarketUpdate struct
 func (e *CryptoCom) Recv() {
 	log.Printf("%s - Connecting to %s\n", e.name, e.url)
-	conn, _, err := websocket.DefaultDialer.Dial(e.url, nil)
+	conn := ws.New(e.url)
+	err := conn.Connect()
 	if err != nil {
 		log.Println("Could not connect to", e.name)
 		return
 	}
-	defer conn.Close()
 
 	// subscribe to book data
 	subscriptionMessage := buildCryptoComSubscription(e.symbol)
@@ -61,19 +61,19 @@ func (e *CryptoCom) Recv() {
 			continue
 		}
 
-		var jsonMap map[string]any
-		json.Unmarshal(raw_msg, &jsonMap)
+		var message cryptoComMessage
+		json.Unmarshal(raw_msg, &message)
 
-		if jsonMap["method"] == "public/heartbeat" {
+		if message.Method == "public/heartbeat" {
 			// Crypto.com requires a heartbeat message response every
 			// 	 30 seconds to keep websocket connection alive
 			var h cryptoComHeartbeat
 			json.Unmarshal(raw_msg, &h)
-			conn.WriteJSON(cryptoComHeartbeat{
+			conn.WriteJSON(cryptoComMessage{
 				Id:     h.Id,
 				Method: heartbeatRequestMethod,
 			})
-		} else if jsonMap["method"] == "subscribe" {
+		} else if message.Method == "subscribe" {
 			var bookMsg cryptoComBookMsg
 			json.Unmarshal(raw_msg, &bookMsg)
 
@@ -85,7 +85,7 @@ func (e *CryptoCom) Recv() {
 
 			lastUpdate = update
 		} else {
-			log.Println(e.name, "unidentified message:", jsonMap["method"])
+			log.Println(e.name, "unidentified message:", message.Method)
 		}
 	}
 }
@@ -139,35 +139,39 @@ func buildCryptoComSubscription(symbol string) subscription {
 	}
 
 	return subscription{
-		Id:     1,
-		Method: "subscribe",
 		Params: params,
+		cryptoComMessage: cryptoComMessage{
+			Id:     1,
+			Method: "subscribe",
+		},
 	}
 }
 
 // Models
 
 type cryptoComHeartbeat struct {
+	cryptoComMessage
+	Code int `json:"code"`
+}
+
+type subscription struct {
+	cryptoComMessage
+	Params map[string][]string `json:"params"`
+}
+
+type cryptoComMessage struct {
 	Id     int    `json:"id"`
 	Method string `json:"method"`
 }
 
-type subscription struct {
-	Id     int                 `json:"id"`
-	Method string              `json:"method"`
-	Params map[string][]string `json:"params"`
-}
-
 type cryptoComSubscriptionResponse struct {
-	Id      int    `json:"id"`
+	cryptoComMessage
 	Code    int    `json:"code"`
-	Method  string `json:"method"`
 	Channel string `json:"channel"`
 }
 
 type cryptoComBookMsg struct {
-	Id     int             `json:"id"`
-	Method string          `json:"method"`
+	cryptoComMessage
 	Code   int             `json:"code"`
 	Result cryptoComResult `json:"result"`
 }

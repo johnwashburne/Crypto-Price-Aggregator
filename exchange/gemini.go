@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/gorilla/websocket"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
 )
 
 type Gemini struct {
@@ -33,12 +33,12 @@ func NewGemini(pair symbol.CurrencyPair) *Gemini {
 // over the updates channel as a MarketUpdate struct
 func (e *Gemini) Recv() {
 	log.Printf("%s - Connecting to %s\n", e.name, e.url)
-	conn, _, err := websocket.DefaultDialer.Dial(e.url, nil)
+	conn := ws.New(e.url)
+	err := conn.Connect()
 	if err != nil {
-		// try reconnect here
-		log.Println("Could not connect to ", e.name)
+		log.Println("Could not connect to", e.name)
+		return
 	}
-	defer conn.Close()
 
 	var ask string
 	var askSize string

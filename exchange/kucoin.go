@@ -7,8 +7,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/websocket"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
 )
 
 type Kucoin struct {
@@ -51,12 +51,12 @@ func NewKucoin(pair symbol.CurrencyPair) *Kucoin {
 func (e *Kucoin) Recv() {
 	// connect to websocket
 	log.Printf("%s - Connecting to %s\n", e.name, e.url)
-	conn, _, err := websocket.DefaultDialer.Dial(e.url, nil)
+	conn := ws.New(e.url)
+	err := conn.Connect()
 	if err != nil {
 		log.Println("Could not connect to", e.name)
 		return
 	}
-	defer conn.Close()
 
 	// welcome message
 	var resp kucoinSubscriptionResponse
