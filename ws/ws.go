@@ -9,15 +9,16 @@ import (
 )
 
 type Client struct {
-	url     string
-	conn    *websocket.Conn
-	backoff backoff.BackOff
+	url           string
+	conn          *websocket.Conn
+	backoff       backoff.BackOff
+	onConnectFunc func(c *Client) error
 }
 
 func New(url string) *Client {
 	return &Client{
 		url:     url,
-		backoff: backoff.NewExponentialBackOff(),
+		backoff: backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 10),
 	}
 }
 
@@ -25,6 +26,7 @@ func (c *Client) Connect() error {
 	if c.conn != nil {
 		return nil
 	}
+
 	return backoff.RetryNotify(c.connect(), c.backoff, nil)
 }
 
@@ -40,8 +42,17 @@ func (c *Client) connect() func() error {
 		})
 
 		c.conn = conn
+		if c.onConnectFunc != nil {
+			return c.onConnectFunc(c)
+		}
+
 		return nil
 	}
+}
+
+// specify a function to run on websocket connection and reconnection
+func (c *Client) OnConnect(onConnect func(c *Client) error) {
+	c.onConnectFunc = onConnect
 }
 
 func (c *Client) ReadJSON(v interface{}) error {

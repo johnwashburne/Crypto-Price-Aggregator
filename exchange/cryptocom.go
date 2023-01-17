@@ -2,6 +2,7 @@ package exchange
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 
@@ -38,27 +39,32 @@ func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
 func (e *CryptoCom) Recv() {
 	log.Printf("%s - Connecting to %s\n", e.name, e.url)
 	conn := ws.New(e.url)
+
+	conn.OnConnect(func(c *ws.Client) error {
+		c.WriteJSON(buildCryptoComSubscription(e.symbol))
+
+		var resp cryptoComSubscriptionResponse
+		conn.ReadJSON(&resp)
+
+		if resp.Method != "subscribe" || resp.Code != 0 {
+			return errors.New(fmt.Sprint(e.name, "could not subscribe"))
+		}
+
+		return nil
+	})
+
 	err := conn.Connect()
 	if err != nil {
 		log.Println("Could not connect to", e.name)
 		return
 	}
 
-	// subscribe to book data
-	subscriptionMessage := buildCryptoComSubscription(e.symbol)
-	conn.WriteJSON(subscriptionMessage)
-
-	// receive subscription verification
-	var resp cryptoComSubscriptionResponse
-	conn.ReadJSON(&resp)
-	// TODO: subscription verification, error handling
-
 	lastUpdate := MarketUpdate{}
 	for {
 		_, raw_msg, err := conn.ReadMessage()
 		if err != nil {
 			log.Println(e.name, err)
-			continue
+			return
 		}
 
 		var message cryptoComMessage

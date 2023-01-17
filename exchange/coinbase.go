@@ -34,23 +34,34 @@ func (e *Coinbase) Recv() {
 	// connect to websocket
 	log.Printf("%s - Connecting to %s\n", e.name, e.url)
 	conn := ws.New(e.url)
+
+	conn.OnConnect(func(c *ws.Client) error {
+		// subscribe to ticker channel
+		err := conn.WriteJSON(coinbaseRequest{
+			Type:       "subscribe",
+			ProductIds: []string{e.symbol},
+			Channels:   []string{"ticker"},
+		})
+
+		if err != nil {
+			return err
+		}
+
+		// confirm accurate subscription
+		var resp coinbaseSubscriptionResponse
+		err = conn.ReadJSON(&resp)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 	err := conn.Connect()
 	if err != nil {
 		log.Println("Could not connect to", e.name)
 		return
 	}
-
-	// subscribe to ticker channel
-	conn.WriteJSON(coinbaseRequest{
-		Type:       "subscribe",
-		ProductIds: []string{e.symbol},
-		Channels:   []string{"ticker"},
-	})
-
-	// confirm accurate subscription
-	var resp coinbaseSubscriptionResponse
-	conn.ReadJSON(&resp)
-	// TODO: subscription verification, error handling
 
 	for {
 		var message coinbaseMessage
