@@ -26,7 +26,7 @@ func main() {
 		exchange.NewGemini(pair),
 		exchange.NewCryptoCom(pair),
 		exchange.NewCoinbase(pair),
-		//exchange.NewKucoin(pair),
+		exchange.NewKucoin(pair),
 	)
 
 	go agg.Recv()

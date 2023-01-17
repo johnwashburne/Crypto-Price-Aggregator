@@ -38,6 +38,7 @@ func (c *Client) connect() func() error {
 		}
 
 		conn.SetPongHandler(func(string) error {
+			log.Println("Handling pong")
 			return conn.SetReadDeadline(time.Now().Add(10 * time.Second))
 		})
 
@@ -50,8 +51,15 @@ func (c *Client) connect() func() error {
 	}
 }
 
+func (c *Client) reconnect() error {
+	c.conn.Close()
+	c.conn = nil
+	log.Println("reconnecting to", c.url)
+	return backoff.RetryNotify(c.connect(), c.backoff, nil)
+}
+
 // specify a function to run on websocket connection and reconnection
-func (c *Client) OnConnect(onConnect func(c *Client) error) {
+func (c *Client) SetOnConnect(onConnect func(c *Client) error) {
 	c.onConnectFunc = onConnect
 }
 
@@ -90,11 +98,4 @@ func (c *Client) ReadMessage() (int, []byte, error) {
 	}
 
 	return messageType, p, err
-}
-
-func (c *Client) reconnect() error {
-	c.conn.Close()
-	c.conn = nil
-	log.Println("reconnecting to", c.url)
-	return backoff.RetryNotify(c.connect(), c.backoff, nil)
 }

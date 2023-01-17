@@ -6,17 +6,19 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
 )
 
 type Kucoin struct {
-	updates chan MarketUpdate
-	symbol  string
-	name    string
-	url     string
-	valid   bool
+	updates      chan MarketUpdate
+	symbol       string
+	name         string
+	url          string
+	valid        bool
+	pingInterval int
 }
 
 func NewKucoin(pair symbol.CurrencyPair) *Kucoin {
@@ -40,11 +42,12 @@ func NewKucoin(pair symbol.CurrencyPair) *Kucoin {
 	token := httpResponse.Data.Token
 
 	return &Kucoin{
-		updates: c,
-		symbol:  s,
-		name:    fmt.Sprintf("Kucoin: %s", pair.Kucoin),
-		url:     fmt.Sprintf("%s?token=%s", base, token),
-		valid:   s != "",
+		updates:      c,
+		symbol:       s,
+		name:         fmt.Sprintf("Kucoin: %s", pair.Kucoin),
+		url:          fmt.Sprintf("%s?token=%s", base, token),
+		valid:        s != "",
+		pingInterval: httpResponse.Data.InstanceServers[0].PingInterval,
 	}
 }
 
@@ -52,41 +55,78 @@ func (e *Kucoin) Recv() {
 	// connect to websocket
 	log.Printf("%s - Connecting to %s\n", e.name, e.url)
 	conn := ws.New(e.url)
+
+	conn.SetOnConnect(func(c *ws.Client) error {
+		// welcome message
+		var welcomeMessage kucoinMessage
+		if err := c.ReadJSON(&welcomeMessage); err != nil {
+			return err
+		}
+
+		err := c.WriteJSON(kucoinSubscribe{
+			kucoinMessage: kucoinMessage{
+				Type: "subscribe",
+				Id:   "1",
+			},
+			Topic:          fmt.Sprintf("/market/ticker:%s", e.symbol),
+			PrivateChannel: false,
+			Response:       true,
+		})
+		if err != nil {
+			return err
+		}
+
+		var ackMessage kucoinMessage
+		if err := c.ReadJSON(&ackMessage); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 	err := conn.Connect()
 	if err != nil {
 		log.Println("Could not connect to", e.name)
 		return
 	}
 
-	// welcome message
-	var resp kucoinSubscriptionResponse
-	conn.ReadJSON(&resp)
-
-	conn.WriteJSON(kucoinSubscribe{
-		Id:             1,
-		Type:           "subscribe",
-		Topic:          fmt.Sprintf("/spotMarket/level2Depth5:%s", e.symbol),
-		PrivateChannel: false,
-		Response:       true,
-	})
-
-	// ack message
-	conn.ReadJSON(&resp)
-
+	ticker := time.NewTicker(time.Duration(e.pingInterval) * time.Millisecond)
+	lastUpdate := MarketUpdate{}
 	for {
-		var message kucoinLevel2
-		err := conn.ReadJSON(&message)
-		if err != nil {
-			log.Println(e.name, err)
-			continue
-		}
+		select {
+		case <-ticker.C:
+			conn.WriteJSON(kucoinMessage{
+				Id:   "1",
+				Type: "ping",
+			})
+		default:
+			_, rawMessage, err := conn.ReadMessage()
+			if err != nil {
+				log.Println(e.name, "Could not read")
+			}
 
-		e.updates <- MarketUpdate{
-			Bid:     message.Data.Bids[0][0],
-			BidSize: message.Data.Bids[0][1],
-			Ask:     message.Data.Asks[0][0],
-			AskSize: message.Data.Asks[0][1],
-			Name:    e.name,
+			var message kucoinMessage
+			json.Unmarshal(rawMessage, &message)
+			if message.Type == "pong" {
+				continue
+			} else if message.Type == "message" {
+				var tickerMessage kucoinTickerMessage
+				json.Unmarshal(rawMessage, &tickerMessage)
+				update := MarketUpdate{
+					Ask:     tickerMessage.Data.BestAsk,
+					AskSize: tickerMessage.Data.BestAskSize,
+					Bid:     tickerMessage.Data.BestBid,
+					BidSize: tickerMessage.Data.BestBidSize,
+					Name:    e.name,
+				}
+
+				if update != lastUpdate {
+					e.updates <- update
+				}
+				lastUpdate = update
+			} else {
+				log.Println(e.name, "unknown message", string(rawMessage))
+			}
 		}
 	}
 }
@@ -122,27 +162,30 @@ type kucoinInstanceServer struct {
 }
 
 type kucoinSubscribe struct {
-	Id             int    `json:"id"`
-	Type           string `json:"type"`
+	kucoinMessage
 	Topic          string `json:"topic"`
 	PrivateChannel bool   `json:"privateChannel"`
 	Response       bool   `json:"response"`
 }
 
-type kucoinSubscriptionResponse struct {
-	Id   int    `json:"id"`
+type kucoinMessage struct {
 	Type string `json:"type"`
+	Id   string `json:"id,omitempty"`
 }
 
-type kucoinLevel2 struct {
-	Type    string           `json:"type"`
+type kucoinTickerMessage struct {
+	kucoinMessage
 	Topic   string           `json:"topic"`
 	Subject string           `json:"subject"`
-	Data    kucoinLevel2Data `json:"data"`
+	Data    kucoinTickerData `json:"data"`
 }
 
-type kucoinLevel2Data struct {
-	Asks      [][]string `json:"asks"`
-	Bids      [][]string `json:"bids"`
-	Timestamp int        `json:"timestamp"`
+type kucoinTickerData struct {
+	Sequence    string `json:"sequence"`
+	Price       string `json:"price"`
+	Size        string `json:"size"`
+	BestAsk     string `json:"bestAsk"`
+	BestAskSize string `json:"bestAskSize"`
+	BestBid     string `json:"bestBid"`
+	BestBidSize string `json:"bestBidSize"`
 }

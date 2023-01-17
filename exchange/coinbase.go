@@ -35,7 +35,7 @@ func (e *Coinbase) Recv() {
 	log.Printf("%s - Connecting to %s\n", e.name, e.url)
 	conn := ws.New(e.url)
 
-	conn.OnConnect(func(c *ws.Client) error {
+	conn.SetOnConnect(func(c *ws.Client) error {
 		// subscribe to ticker channel
 		err := conn.WriteJSON(coinbaseRequest{
 			Type:       "subscribe",
