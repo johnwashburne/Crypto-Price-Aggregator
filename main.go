@@ -20,13 +20,14 @@ func main() {
 		return
 	}
 
-	pair := symbolManager.GetCurrencyPair("BTC", "USDT")
+	pair := symbolManager.GetCurrencyPair("BTC", "USD")
 
 	agg := aggregator.New(
 		exchange.NewGemini(pair),
 		exchange.NewCryptoCom(pair),
 		exchange.NewCoinbase(pair),
 		exchange.NewKucoin(pair),
+		exchange.NewBitstamp(pair),
 	)
 
 	go agg.Recv()

@@ -34,8 +34,7 @@ func NewGemini(pair symbol.CurrencyPair) *Gemini {
 func (e *Gemini) Recv() {
 	log.Printf("%s - Connecting to %s\n", e.name, e.url)
 	conn := ws.New(e.url)
-	err := conn.Connect()
-	if err != nil {
+	if err := conn.Connect(); err != nil {
 		log.Println("Could not connect to", e.name)
 		return
 	}
@@ -46,8 +45,7 @@ func (e *Gemini) Recv() {
 	var bidSize string
 	for {
 		var message geminiMessage
-		err = conn.ReadJSON(&message)
-		if err != nil {
+		if err := conn.ReadJSON(&message); err != nil {
 			log.Println(e.name, err)
 		}
 

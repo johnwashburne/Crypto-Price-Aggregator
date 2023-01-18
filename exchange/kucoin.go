@@ -84,8 +84,7 @@ func (e *Kucoin) Recv() {
 		return nil
 	})
 
-	err := conn.Connect()
-	if err != nil {
+	if err := conn.Connect(); err != nil {
 		log.Println("Could not connect to", e.name)
 		return
 	}

@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 class Symbol:
 
-    def __init__(self, symbol, base_currency, quote_currency):
+    def __init__(self, symbol: str, base_currency: str, quote_currency: str):
         self.symbol = symbol
         self.base_currency = base_currency
         self.quote_currency = quote_currency
@@ -88,6 +88,21 @@ def get_kucoin_symbols() -> List[Symbol]:
 
     return res
 
+def get_bitstamp_symbols() -> List[Symbol]:
+    response = requests.get("https://www.bitstamp.net/api/v2/ticker/")
+    res = []
+
+    for instrument in tqdm(response.json()):
+        base = instrument['pair'].split("/")[0]
+        quote = instrument['pair'].split("/")[1]
+        res.append(Symbol(
+            instrument['pair'].replace("/", "").lower(),
+            base,
+            quote
+        ))
+
+    return res
+
 def add_symbols(
         curr_symbols: dict, 
         new_symbols: List[Symbol], 
@@ -108,7 +123,8 @@ def add_symbols(
 if __name__ == "__main__":
     
     symbols = {}
-
+    
+    add_symbols(symbols, get_bitstamp_symbols(), "Bitstamp")
     add_symbols(symbols, get_gemini_symbols(), "Gemini")
     add_symbols(symbols, get_crypto_com_symbols(), "Crypto.com")
     add_symbols(symbols, get_coinbase_symbols(), "Coinbase")

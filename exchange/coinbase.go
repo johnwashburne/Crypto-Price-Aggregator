@@ -49,24 +49,21 @@ func (e *Coinbase) Recv() {
 
 		// confirm accurate subscription
 		var resp coinbaseSubscriptionResponse
-		err = conn.ReadJSON(&resp)
-		if err != nil {
+		if err := conn.ReadJSON(&resp); err != nil {
 			return err
 		}
 
 		return nil
 	})
 
-	err := conn.Connect()
-	if err != nil {
+	if err := conn.Connect(); err != nil {
 		log.Println("Could not connect to", e.name)
 		return
 	}
 
 	for {
 		var message coinbaseMessage
-		err = conn.ReadJSON(&message)
-		if err != nil {
+		if err := conn.ReadJSON(&message); err != nil {
 			log.Println(e.name, err)
 			continue
 		}

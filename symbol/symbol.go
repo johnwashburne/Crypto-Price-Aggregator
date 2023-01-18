@@ -11,9 +11,10 @@ type SymbolManager interface {
 }
 
 type CurrencyPair struct {
-	Gemini    string `json:"Gemini"`
-	CryptoCom string `json:"Crypto.com"`
+	Bitstamp  string `json:"Bitstamp"`
 	Coinbase  string `json:"Coinbase"`
+	CryptoCom string `json:"Crypto.com"`
+	Gemini    string `json:"Gemini"`
 	Kraken    string `json:"Kraken"`
 	Kucoin    string `json:"Kucoin"`
 }
