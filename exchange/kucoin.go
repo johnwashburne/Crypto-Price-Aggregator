@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"time"
 
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
+	"go.uber.org/zap"
 )
 
 type Kucoin struct {
@@ -19,20 +19,23 @@ type Kucoin struct {
 	url          string
 	valid        bool
 	pingInterval int
+	logger       *zap.SugaredLogger
 }
 
 func NewKucoin(pair symbol.CurrencyPair) *Kucoin {
 	c := make(chan MarketUpdate, updateBufSize)
 	s := pair.Kucoin
+	name := fmt.Sprintf("Kucoin: %s", pair.Kucoin)
+	logger := zap.S().Named(name)
 
 	resp, err := http.Post("https://api.kucoin.com/api/v1/bullet-public", "", nil)
 	if err != nil {
-		log.Panic("Could not generate Kucoin Websocket URL", err)
+		logger.Panic("Could not generate Kucoin Websocket URL", err)
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Panic("Could not generate Kucoin Websocket URL", err)
+		logger.Panic("Could not generate Kucoin Websocket URL", err)
 	}
 
 	var httpResponse kucoinHttpResponse
@@ -44,16 +47,17 @@ func NewKucoin(pair symbol.CurrencyPair) *Kucoin {
 	return &Kucoin{
 		updates:      c,
 		symbol:       s,
-		name:         fmt.Sprintf("Kucoin: %s", pair.Kucoin),
+		name:         name,
 		url:          fmt.Sprintf("%s?token=%s", base, token),
 		valid:        s != "",
 		pingInterval: httpResponse.Data.InstanceServers[0].PingInterval,
+		logger:       logger,
 	}
 }
 
 func (e *Kucoin) Recv() {
 	// connect to websocket
-	log.Printf("%s - Connecting to %s\n", e.name, e.url)
+	e.logger.Debug("connecting to socket")
 	conn := ws.New(e.url)
 
 	conn.SetOnConnect(func(c *ws.Client) error {
@@ -85,15 +89,17 @@ func (e *Kucoin) Recv() {
 	})
 
 	if err := conn.Connect(); err != nil {
-		log.Println("Could not connect to", e.name)
+		e.logger.Warn("could not connect to socket")
 		return
 	}
+	e.logger.Debug("connected to socket")
 
 	ticker := time.NewTicker(time.Duration(e.pingInterval) * time.Millisecond)
 	lastUpdate := MarketUpdate{}
 	for {
 		select {
 		case <-ticker.C:
+			e.logger.Debug("sending ping")
 			conn.WriteJSON(kucoinMessage{
 				Id:   "1",
 				Type: "ping",
@@ -101,12 +107,14 @@ func (e *Kucoin) Recv() {
 		default:
 			_, rawMessage, err := conn.ReadMessage()
 			if err != nil {
-				log.Println(e.name, "Could not read")
+				e.logger.Warn("Could not read message", err)
+				continue
 			}
 
 			var message kucoinMessage
 			json.Unmarshal(rawMessage, &message)
 			if message.Type == "pong" {
+				e.logger.Debug("pong received")
 				continue
 			} else if message.Type == "message" {
 				var tickerMessage kucoinTickerMessage
@@ -124,7 +132,7 @@ func (e *Kucoin) Recv() {
 				}
 				lastUpdate = update
 			} else {
-				log.Println(e.name, "unknown message", string(rawMessage))
+				e.logger.Warn("unknown message", string(rawMessage))
 			}
 		}
 	}

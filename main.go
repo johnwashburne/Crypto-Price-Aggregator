@@ -1,33 +1,37 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 	"os/signal"
 
 	"github.com/johnwashburne/Crypto-Price-Aggregator/aggregator"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/exchange"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 func main() {
+
+	initLogger()
+
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
 	symbolManager, err := symbol.LoadJsonSymbolData()
 	if err != nil {
-		log.Println("Could not load symbol manager:", err)
 		return
 	}
 
-	pair := symbolManager.GetCurrencyPair("BTC", "USD")
+	pair := symbolManager.GetCurrencyPair("ETH", "USD")
 
 	agg := aggregator.New(
-		exchange.NewGemini(pair),
-		exchange.NewCryptoCom(pair),
-		exchange.NewCoinbase(pair),
-		exchange.NewKucoin(pair),
 		exchange.NewBitstamp(pair),
+		exchange.NewCoinbase(pair),
+		exchange.NewCryptoCom(pair),
+		exchange.NewGemini(pair),
+		exchange.NewKucoin(pair),
 	)
 
 	go agg.Recv()
@@ -37,10 +41,34 @@ func main() {
 			if !ok {
 				return
 			}
-			log.Println(msg.Bid, msg.BidPlatform, msg.Ask, msg.AskPlatform)
+			fmt.Println(msg.Bid, msg.BidPlatform, msg.Ask, msg.AskPlatform)
 		case <-interrupt:
 			return
 		}
 	}
+
+}
+
+func initLogger() {
+	// set up logging
+	logger, _ := zap.Config{
+		Encoding:    "json",
+		Level:       zap.NewAtomicLevelAt(zapcore.DebugLevel),
+		OutputPaths: []string{"logs/logs.txt"},
+		EncoderConfig: zapcore.EncoderConfig{
+			MessageKey: "message", // <--
+			NameKey:    "name",
+
+			TimeKey:    "time",
+			EncodeTime: zapcore.ISO8601TimeEncoder,
+
+			CallerKey:    "caller",
+			EncodeCaller: zapcore.ShortCallerEncoder,
+
+			LevelKey:    "level",
+			EncodeLevel: zapcore.CapitalLevelEncoder,
+		},
+	}.Build()
+	zap.ReplaceGlobals(logger)
 
 }

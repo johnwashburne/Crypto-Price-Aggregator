@@ -2,10 +2,10 @@ package exchange
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
+	"go.uber.org/zap"
 )
 
 type Gemini struct {
@@ -14,30 +14,34 @@ type Gemini struct {
 	name    string
 	symbol  string
 	valid   bool
+	logger  *zap.SugaredLogger
 }
 
 // Create new Gemini struct
 func NewGemini(pair symbol.CurrencyPair) *Gemini {
 	c := make(chan MarketUpdate, updateBufSize)
+	name := fmt.Sprintf("Gemini: %s", pair.Gemini)
 
 	return &Gemini{
 		updates: c,
 		url:     fmt.Sprintf("wss://api.gemini.com/v1/marketdata/%s?top_of_book=true", pair.Gemini),
-		name:    fmt.Sprintf("Gemini: %s", pair.Gemini),
+		name:    name,
 		symbol:  pair.Gemini,
 		valid:   pair.Gemini != "",
+		logger:  zap.S().Named(name),
 	}
 }
 
 // Receive book data from Gemini, send any top of book updates
 // over the updates channel as a MarketUpdate struct
 func (e *Gemini) Recv() {
-	log.Printf("%s - Connecting to %s\n", e.name, e.url)
+	e.logger.Debugf("connecting to socket")
 	conn := ws.New(e.url)
 	if err := conn.Connect(); err != nil {
-		log.Println("Could not connect to", e.name)
+		e.logger.Infof("could not connect to socket")
 		return
 	}
+	e.logger.Debug("connected to socket")
 
 	var ask string
 	var askSize string
@@ -46,7 +50,8 @@ func (e *Gemini) Recv() {
 	for {
 		var message geminiMessage
 		if err := conn.ReadJSON(&message); err != nil {
-			log.Println(e.name, err)
+			e.logger.Warn(err)
+			continue
 		}
 
 		for _, event := range message.Events {

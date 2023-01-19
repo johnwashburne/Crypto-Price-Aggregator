@@ -2,10 +2,10 @@ package exchange
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
+	"go.uber.org/zap"
 )
 
 type Coinbase struct {
@@ -14,17 +14,20 @@ type Coinbase struct {
 	name    string
 	url     string
 	valid   bool
+	logger  *zap.SugaredLogger
 }
 
 func NewCoinbase(pair symbol.CurrencyPair) *Coinbase {
 	c := make(chan MarketUpdate, updateBufSize)
+	name := fmt.Sprintf("Coinbase: %s", pair.Coinbase)
 
 	return &Coinbase{
 		updates: c,
 		symbol:  pair.Coinbase,
-		name:    fmt.Sprintf("Coinbase: %s", pair.Coinbase),
+		name:    name,
 		url:     "wss://ws-feed.exchange.coinbase.com",
 		valid:   pair.Coinbase != "",
+		logger:  zap.S().Named(name),
 	}
 }
 
@@ -32,7 +35,7 @@ func NewCoinbase(pair symbol.CurrencyPair) *Coinbase {
 // over the updates channel as a MarketUpdate struct
 func (e *Coinbase) Recv() {
 	// connect to websocket
-	log.Printf("%s - Connecting to %s\n", e.name, e.url)
+	e.logger.Debugf("connecting to socket")
 	conn := ws.New(e.url)
 
 	conn.SetOnConnect(func(c *ws.Client) error {
@@ -57,14 +60,15 @@ func (e *Coinbase) Recv() {
 	})
 
 	if err := conn.Connect(); err != nil {
-		log.Println("Could not connect to", e.name)
+		e.logger.Warn("could not connect to socket")
 		return
 	}
+	e.logger.Debug("connected to socket")
 
 	for {
 		var message coinbaseMessage
 		if err := conn.ReadJSON(&message); err != nil {
-			log.Println(e.name, err)
+			e.logger.Info(err)
 			continue
 		}
 

@@ -1,9 +1,8 @@
 package aggregator
 
 import (
-	"log"
-
 	"github.com/johnwashburne/Crypto-Price-Aggregator/exchange"
+	"go.uber.org/zap"
 )
 
 type BestPrice struct {
@@ -18,6 +17,7 @@ type BestPrice struct {
 type Aggregator struct {
 	updates   chan BestPrice
 	exchanges []exchange.Exchange
+	logger    *zap.SugaredLogger
 }
 
 // Create a new aggregator struct
@@ -26,6 +26,7 @@ func New(exchanges ...exchange.Exchange) Aggregator {
 	return Aggregator{
 		updates:   c,
 		exchanges: exchanges,
+		logger:    zap.S().Named("Aggregator"),
 	}
 }
 
@@ -45,7 +46,7 @@ func (a *Aggregator) Recv() {
 	validExchange := false // flag to ensure there is at least 1 valid exchange
 	for _, exch := range a.exchanges {
 		if !exch.Valid() {
-			log.Println(exch.Name(), "not valid, cannot connect")
+			a.logger.Info(exch.Name(), "not valid, cannot connect")
 			continue
 		}
 
@@ -59,7 +60,7 @@ func (a *Aggregator) Recv() {
 	}
 
 	if !validExchange {
-		log.Println("No valid exchange connections")
+		a.logger.Info("no valid exchange connections, closing channel")
 		close(agg)
 		close(a.updates)
 		return

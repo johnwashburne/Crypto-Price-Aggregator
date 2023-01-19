@@ -1,11 +1,9 @@
 package ws
 
 import (
-	"log"
-	"time"
-
 	"github.com/cenkalti/backoff/v4"
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 type Client struct {
@@ -13,12 +11,14 @@ type Client struct {
 	conn          *websocket.Conn
 	backoff       backoff.BackOff
 	onConnectFunc func(c *Client) error
+	logger        *zap.SugaredLogger
 }
 
 func New(url string) *Client {
 	return &Client{
 		url:     url,
 		backoff: backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 10),
+		logger:  zap.S().Named("Websocket Client"),
 	}
 }
 
@@ -32,21 +32,21 @@ func (c *Client) Connect() error {
 
 func (c *Client) connect() func() error {
 	return func() error {
+		c.logger.Debug("attempting connection to ", c.url)
 		conn, _, err := websocket.DefaultDialer.Dial(c.url, nil)
 		if err != nil {
 			return err
 		}
 
-		conn.SetPongHandler(func(string) error {
-			log.Println("Handling pong")
-			return conn.SetReadDeadline(time.Now().Add(10 * time.Second))
-		})
-
 		c.conn = conn
 		if c.onConnectFunc != nil {
-			return c.onConnectFunc(c)
+			c.logger.Debug("sending startup messages ", c.url)
+			if err := c.onConnectFunc(c); err != nil {
+				return err
+			}
 		}
 
+		c.logger.Debug("connection established: ", c.url)
 		return nil
 	}
 }
@@ -54,7 +54,7 @@ func (c *Client) connect() func() error {
 func (c *Client) reconnect() error {
 	c.conn.Close()
 	c.conn = nil
-	log.Println("reconnecting to", c.url)
+	c.logger.Debug("reconnecting to", c.url)
 	return backoff.RetryNotify(c.connect(), c.backoff, nil)
 }
 

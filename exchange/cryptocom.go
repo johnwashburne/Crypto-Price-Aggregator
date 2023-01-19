@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
+	"go.uber.org/zap"
 )
 
 // message method for heartbeat response
@@ -19,25 +19,28 @@ type CryptoCom struct {
 	name    string
 	symbol  string
 	valid   bool
+	logger  *zap.SugaredLogger
 }
 
 // create new Crypto.com struct
 func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
 	c := make(chan MarketUpdate, updateBufSize)
+	name := fmt.Sprintf("Crypto.com: %s", pair.CryptoCom)
 
 	return &CryptoCom{
 		updates: c,
 		url:     "wss://stream.crypto.com/exchange/v1/market",
-		name:    fmt.Sprintf("Crypto.com: %s", pair.CryptoCom),
+		name:    name,
 		symbol:  pair.CryptoCom,
 		valid:   pair.CryptoCom != "",
+		logger:  zap.S().Named(name),
 	}
 }
 
 // Receive book data from Crypto.com, send any top of book updates
 // over the updates channel as a MarketUpdate struct
 func (e *CryptoCom) Recv() {
-	log.Printf("%s - Connecting to %s\n", e.name, e.url)
+	e.logger.Debugf("connecting to socket")
 	conn := ws.New(e.url)
 
 	conn.SetOnConnect(func(c *ws.Client) error {
@@ -54,15 +57,16 @@ func (e *CryptoCom) Recv() {
 	})
 
 	if err := conn.Connect(); err != nil {
-		log.Println("Could not connect to", e.name)
+		e.logger.Warn("could not connect to socket")
 		return
 	}
+	e.logger.Debug("connected to socket")
 
 	lastUpdate := MarketUpdate{}
 	for {
 		_, raw_msg, err := conn.ReadMessage()
 		if err != nil {
-			log.Println(e.name, err)
+			e.logger.Warn(e.name, err)
 			return
 		}
 
@@ -90,7 +94,7 @@ func (e *CryptoCom) Recv() {
 
 			lastUpdate = update
 		} else {
-			log.Println(e.name, "unidentified message:", message.Method)
+			e.logger.Info(e.name, "unidentified message:", message.Method)
 		}
 	}
 }

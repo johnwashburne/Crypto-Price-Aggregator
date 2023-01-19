@@ -2,10 +2,10 @@ package exchange
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
+	"go.uber.org/zap"
 )
 
 type Bitstamp struct {
@@ -14,22 +14,25 @@ type Bitstamp struct {
 	name    string
 	symbol  string
 	valid   bool
+	logger  *zap.SugaredLogger
 }
 
 func NewBitstamp(pair symbol.CurrencyPair) *Bitstamp {
 	c := make(chan MarketUpdate, updateBufSize)
+	name := fmt.Sprintf("Bitstamp: %s", pair.Bitstamp)
 
 	return &Bitstamp{
 		updates: c,
 		url:     "wss://ws.bitstamp.net",
 		symbol:  pair.Bitstamp,
-		name:    fmt.Sprintf("Bitstamp: %s", pair.Bitstamp),
+		name:    name,
 		valid:   pair.Bitstamp != "",
+		logger:  zap.S().Named(name),
 	}
 }
 
 func (e *Bitstamp) Recv() {
-	log.Printf("%s - Connecting to %s\n", e.name, e.url)
+	e.logger.Debug("connecting to socket")
 	conn := ws.New(e.url)
 
 	conn.SetOnConnect(func(c *ws.Client) error {
@@ -51,15 +54,16 @@ func (e *Bitstamp) Recv() {
 	})
 
 	if err := conn.Connect(); err != nil {
-		log.Println("Could not connect to", e.name)
+		e.logger.Warn("Could not connect to socket")
 		return
 	}
+	e.logger.Debug("connected to socket")
 
 	lastUpdate := MarketUpdate{}
 	for {
 		var message bitstampOrderBook
 		if err := conn.ReadJSON(&message); err != nil {
-			log.Println(e.name, err)
+			e.logger.Warn(err)
 			return
 		}
 
