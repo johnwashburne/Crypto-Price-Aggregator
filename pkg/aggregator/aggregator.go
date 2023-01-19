@@ -1,7 +1,7 @@
 package aggregator
 
 import (
-	"github.com/johnwashburne/Crypto-Price-Aggregator/exchange"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/exchange"
 	"go.uber.org/zap"
 )
 

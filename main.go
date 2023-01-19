@@ -5,9 +5,9 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/johnwashburne/Crypto-Price-Aggregator/aggregator"
-	"github.com/johnwashburne/Crypto-Price-Aggregator/exchange"
-	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/aggregator"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/exchange"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/symbol"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

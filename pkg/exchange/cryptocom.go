@@ -5,8 +5,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/johnwashburne/Crypto-Price-Aggregator/symbol"
-	"github.com/johnwashburne/Crypto-Price-Aggregator/ws"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/symbol"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/ws"
 	"go.uber.org/zap"
 )
 

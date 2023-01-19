@@ -1,0 +1,20 @@
+{"level":"DEBUG","time":"2023-01-19T15:23:09.608-0500","name":"Bitstamp: ethusd","caller":"exchange/bitstamp.go:35","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.608-0500","name":"Websocket Client","caller":"ws/ws.go:35","message":"attempting connection to wss://ws.bitstamp.net"}
+{"level":"INFO","time":"2023-01-19T15:23:09.608-0500","name":"Aggregator","caller":"aggregator/aggregator.go:49","message":"Kucoin: not valid, cannot connect"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.608-0500","name":"Gemini: ETHUSD","caller":"exchange/gemini.go:38","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.608-0500","name":"Coinbase: ETH-USD","caller":"exchange/coinbase.go:38","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.608-0500","name":"Crypto.com: ETH_USD","caller":"exchange/cryptocom.go:43","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.658-0500","name":"Websocket Client","caller":"ws/ws.go:35","message":"attempting connection to wss://stream.crypto.com/exchange/v1/market"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.658-0500","name":"Websocket Client","caller":"ws/ws.go:35","message":"attempting connection to wss://ws-feed.exchange.coinbase.com"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.608-0500","name":"Websocket Client","caller":"ws/ws.go:35","message":"attempting connection to wss://api.gemini.com/v1/marketdata/ETHUSD?top_of_book=true"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.760-0500","name":"Websocket Client","caller":"ws/ws.go:43","message":"sending startup messages wss://ws-feed.exchange.coinbase.com"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.783-0500","name":"Websocket Client","caller":"ws/ws.go:49","message":"connection established: wss://ws-feed.exchange.coinbase.com"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.784-0500","name":"Coinbase: ETH-USD","caller":"exchange/coinbase.go:66","message":"connected to socket"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.882-0500","name":"Websocket Client","caller":"ws/ws.go:49","message":"connection established: wss://api.gemini.com/v1/marketdata/ETHUSD?top_of_book=true"}
+{"level":"DEBUG","time":"2023-01-19T15:23:09.882-0500","name":"Gemini: ETHUSD","caller":"exchange/gemini.go:44","message":"connected to socket"}
+{"level":"DEBUG","time":"2023-01-19T15:23:10.126-0500","name":"Websocket Client","caller":"ws/ws.go:43","message":"sending startup messages wss://ws.bitstamp.net"}
+{"level":"DEBUG","time":"2023-01-19T15:23:10.234-0500","name":"Websocket Client","caller":"ws/ws.go:49","message":"connection established: wss://ws.bitstamp.net"}
+{"level":"DEBUG","time":"2023-01-19T15:23:10.234-0500","name":"Bitstamp: ethusd","caller":"exchange/bitstamp.go:60","message":"connected to socket"}
+{"level":"DEBUG","time":"2023-01-19T15:23:10.420-0500","name":"Websocket Client","caller":"ws/ws.go:43","message":"sending startup messages wss://stream.crypto.com/exchange/v1/market"}
+{"level":"DEBUG","time":"2023-01-19T15:23:10.650-0500","name":"Websocket Client","caller":"ws/ws.go:49","message":"connection established: wss://stream.crypto.com/exchange/v1/market"}
+{"level":"DEBUG","time":"2023-01-19T15:23:10.650-0500","name":"Crypto.com: ETH_USD","caller":"exchange/cryptocom.go:63","message":"connected to socket"}

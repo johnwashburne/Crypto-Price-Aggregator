@@ -24,7 +24,7 @@ type JsonManager struct {
 }
 
 func LoadJsonSymbolData() (*JsonManager, error) {
-	jsonFile, err := os.Open("./symbol/symbol_database.json")
+	jsonFile, err := os.Open("./pkg/symbol/symbol_database.json")
 	if err != nil {
 		return nil, err
 	}
