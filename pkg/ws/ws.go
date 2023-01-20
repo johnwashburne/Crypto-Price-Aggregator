@@ -54,7 +54,7 @@ func (c *Client) connect() func() error {
 func (c *Client) reconnect() error {
 	c.conn.Close()
 	c.conn = nil
-	c.logger.Debug("reconnecting to", c.url)
+	c.logger.Warn("reconnecting to ", c.url)
 	return backoff.RetryNotify(c.connect(), c.backoff, nil)
 }
 

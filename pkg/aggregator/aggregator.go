@@ -1,3 +1,5 @@
+// Aggregate the price updates from a variable number of exchanges and send a BestPrice
+// struct over the Updates() channel whenever there is an update to the global best bid or ask
 package aggregator
 
 import (
@@ -88,6 +90,7 @@ func (a *Aggregator) Recv() {
 	}
 }
 
+// access the updates channel
 func (a *Aggregator) Updates() chan BestPrice {
 	return a.updates
 }

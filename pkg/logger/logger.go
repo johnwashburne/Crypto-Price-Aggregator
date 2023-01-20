@@ -1,3 +1,7 @@
+// A wrapper around a logging framework that allows for a global logger
+// and ease of switching logging frameworks.
+// Currently using Uber's zap logging framework.
+
 package logger
 
 import (
@@ -14,6 +18,8 @@ type Logger struct {
 
 var l *Logger
 
+// Creates the global logger, from which named loggers can be generated.
+// All logging is thread safe
 func CreateLogger() error {
 	// set up logging
 	zapLogger, err := zap.Config{

@@ -1,24 +1,30 @@
-{"level":"DEBUG","time":"2023-01-19T21:45:39.593-0500","name":"Gemini: ETHUSDT","caller":"logger/logger.go:78","message":"connecting to socket"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.593-0500","name":"Crypto.com: ETH_USDT","caller":"logger/logger.go:78","message":"connecting to socket"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.593-0500","name":"Bitstamp: ethusdt","caller":"logger/logger.go:78","message":"connecting to socket"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.596-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"attempting connection to wss://ws.bitstamp.net"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.596-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"attempting connection to wss://stream.crypto.com/exchange/v1/market"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.593-0500","name":"Coinbase: ETH-USDT","caller":"logger/logger.go:78","message":"connecting to socket"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.593-0500","name":"Kucoin: ETH-USDT","caller":"logger/logger.go:78","message":"connecting to socket"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.597-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"attempting connection to wss://ws-feed.exchange.coinbase.com"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.596-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"attempting connection to wss://api.gemini.com/v1/marketdata/ETHUSDT?top_of_book=true"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.598-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"attempting connection to wss://ws-api-spot.kucoin.com/?token=2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJw2dpaKSBaA9DQ1_BAn95IrKGVf_c2Zt5diYB9J6i9GjsxUuhPw3BlrzazF6ghq4L6o_Jad4AE-7BPlFdvzssKA=.kSuQGr9f2Qi8ddgwbhKikA=="}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.847-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"sending startup messages wss://ws-feed.exchange.coinbase.com"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.913-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"connection established: wss://ws-feed.exchange.coinbase.com"}
-{"level":"DEBUG","time":"2023-01-19T21:45:39.916-0500","name":"Coinbase: ETH-USDT","caller":"logger/logger.go:78","message":"connected to socket"}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.194-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"sending startup messages wss://ws.bitstamp.net"}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.292-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"connection established: wss://api.gemini.com/v1/marketdata/ETHUSDT?top_of_book=true"}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.292-0500","name":"Gemini: ETHUSDT","caller":"logger/logger.go:78","message":"connected to socket"}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.316-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"connection established: wss://ws.bitstamp.net"}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.316-0500","name":"Bitstamp: ethusdt","caller":"logger/logger.go:78","message":"connected to socket"}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.356-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"sending startup messages wss://ws-api-spot.kucoin.com/?token=2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJw2dpaKSBaA9DQ1_BAn95IrKGVf_c2Zt5diYB9J6i9GjsxUuhPw3BlrzazF6ghq4L6o_Jad4AE-7BPlFdvzssKA=.kSuQGr9f2Qi8ddgwbhKikA=="}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.489-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"sending startup messages wss://stream.crypto.com/exchange/v1/market"}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.529-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"connection established: wss://ws-api-spot.kucoin.com/?token=2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJw2dpaKSBaA9DQ1_BAn95IrKGVf_c2Zt5diYB9J6i9GjsxUuhPw3BlrzazF6ghq4L6o_Jad4AE-7BPlFdvzssKA=.kSuQGr9f2Qi8ddgwbhKikA=="}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.529-0500","name":"Kucoin: ETH-USDT","caller":"logger/logger.go:78","message":"connected to socket"}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.678-0500","name":"Websocket Client","caller":"logger/logger.go:78","message":"connection established: wss://stream.crypto.com/exchange/v1/market"}
-{"level":"DEBUG","time":"2023-01-19T21:45:40.678-0500","name":"Crypto.com: ETH_USDT","caller":"logger/logger.go:78","message":"connected to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.015-0500","name":"Kucoin: BTC-USDT","caller":"logger/logger.go:84","message":"applying for instance server token"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.017-0500","name":"Kucoin: BTC-USDT","caller":"logger/logger.go:84","message":"granted instance server token"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.018-0500","name":"Binance.US: btcusdt","caller":"logger/logger.go:84","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.018-0500","name":"Coinbase: BTC-USDT","caller":"logger/logger.go:84","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.018-0500","name":"Bitstamp: btcusdt","caller":"logger/logger.go:84","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.018-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"attempting connection to wss://stream.binance.us:9443/ws/btcusdt@bookTicker"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.018-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"attempting connection to wss://ws-feed.exchange.coinbase.com"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.018-0500","name":"Gemini: BTCUSDT","caller":"logger/logger.go:84","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.018-0500","name":"Crypto.com: BTC_USDT","caller":"logger/logger.go:84","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.018-0500","name":"Kucoin: BTC-USDT","caller":"logger/logger.go:84","message":"connecting to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.069-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"attempting connection to wss://ws.bitstamp.net"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.072-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"attempting connection to wss://api.gemini.com/v1/marketdata/BTCUSDT?top_of_book=true"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.073-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"attempting connection to wss://ws-api-spot.kucoin.com/?token=2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJ1mCQORKVSC59jKtqkdWoFZbf6Mzg74-L9iYB9J6i9GjsxUuhPw3BlrzazF6ghq4LykcFznJOURw8ew-QFr5wiQ=.MFlwGNbSKWp4Eolew37rPQ=="}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.073-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"attempting connection to wss://stream.crypto.com/exchange/v1/market"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.196-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"sending startup messages wss://ws-feed.exchange.coinbase.com"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.228-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"connection established: wss://ws-feed.exchange.coinbase.com"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.228-0500","name":"Coinbase: BTC-USDT","caller":"logger/logger.go:84","message":"connected to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.230-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"connection established: wss://api.gemini.com/v1/marketdata/BTCUSDT?top_of_book=true"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.230-0500","name":"Gemini: BTCUSDT","caller":"logger/logger.go:84","message":"connected to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.510-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"connection established: wss://stream.binance.us:9443/ws/btcusdt@bookTicker"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.522-0500","name":"Binance.US: btcusdt","caller":"logger/logger.go:84","message":"connected to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.641-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"sending startup messages wss://ws.bitstamp.net"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.752-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"connection established: wss://ws.bitstamp.net"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.752-0500","name":"Bitstamp: btcusdt","caller":"logger/logger.go:84","message":"connected to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.770-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"sending startup messages wss://ws-api-spot.kucoin.com/?token=2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJ1mCQORKVSC59jKtqkdWoFZbf6Mzg74-L9iYB9J6i9GjsxUuhPw3BlrzazF6ghq4LykcFznJOURw8ew-QFr5wiQ=.MFlwGNbSKWp4Eolew37rPQ=="}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.872-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"sending startup messages wss://stream.crypto.com/exchange/v1/market"}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.952-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"connection established: wss://ws-api-spot.kucoin.com/?token=2neAiuYvAU61ZDXANAGAsiL4-iAExhsBXZxftpOeh_55i3Ysy2q2LEsEWU64mdzUOPusi34M_wGoSf7iNyEWJ1mCQORKVSC59jKtqkdWoFZbf6Mzg74-L9iYB9J6i9GjsxUuhPw3BlrzazF6ghq4LykcFznJOURw8ew-QFr5wiQ=.MFlwGNbSKWp4Eolew37rPQ=="}
+{"level":"DEBUG","time":"2023-01-20T14:25:18.952-0500","name":"Kucoin: BTC-USDT","caller":"logger/logger.go:84","message":"connected to socket"}
+{"level":"DEBUG","time":"2023-01-20T14:25:19.067-0500","name":"Websocket Client","caller":"logger/logger.go:84","message":"connection established: wss://stream.crypto.com/exchange/v1/market"}
+{"level":"DEBUG","time":"2023-01-20T14:25:19.067-0500","name":"Crypto.com: BTC_USDT","caller":"logger/logger.go:84","message":"connected to socket"}

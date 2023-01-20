@@ -1,3 +1,5 @@
+// Aggregate top of book updates from a currency pair listed on Crypto.com
+
 package exchange
 
 import (

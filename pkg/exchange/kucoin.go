@@ -1,3 +1,5 @@
+// Aggreagate top of book updates from a currency pair listed on Kucoin
+
 package exchange
 
 import (
@@ -28,33 +30,19 @@ func NewKucoin(pair symbol.CurrencyPair) *Kucoin {
 	name := fmt.Sprintf("Kucoin: %s", pair.Kucoin)
 	logger := logger.Named(name)
 
-	resp, err := http.Post("https://api.kucoin.com/api/v1/bullet-public", "", nil)
-	if err != nil {
-		logger.Warn("Could not generate Kucoin Websocket URL", err)
-		return nil
-	}
-	defer resp.Body.Close()
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		logger.Warn("Could not generate Kucoin Websocket URL", err)
-		return nil
+	k := &Kucoin{
+		updates: c,
+		symbol:  s,
+		name:    name,
+		valid:   s != "",
+		logger:  logger,
 	}
 
-	var httpResponse kucoinHttpResponse
-	json.Unmarshal(body, &httpResponse)
-
-	base := httpResponse.Data.InstanceServers[0].Endpoint
-	token := httpResponse.Data.Token
-
-	return &Kucoin{
-		updates:      c,
-		symbol:       s,
-		name:         name,
-		url:          fmt.Sprintf("%s?token=%s", base, token),
-		valid:        s != "",
-		pingInterval: httpResponse.Data.InstanceServers[0].PingInterval,
-		logger:       logger,
+	if err := k.applyForInstanceServer(); err != nil {
+		k.valid = false
 	}
+
+	return k
 }
 
 func (e *Kucoin) Recv() {
@@ -66,6 +54,8 @@ func (e *Kucoin) Recv() {
 		// welcome message
 		var welcomeMessage kucoinMessage
 		if err := c.ReadJSON(&welcomeMessage); err != nil {
+			// if error in connection, apply for new token
+			e.applyForInstanceServer()
 			return err
 		}
 
@@ -79,11 +69,15 @@ func (e *Kucoin) Recv() {
 			Response:       true,
 		})
 		if err != nil {
+			// if error in connection, apply for new token
+			e.applyForInstanceServer()
 			return err
 		}
 
 		var ackMessage kucoinMessage
 		if err := c.ReadJSON(&ackMessage); err != nil {
+			// if error in connection, apply for new token
+			e.applyForInstanceServer()
 			return err
 		}
 
@@ -138,6 +132,32 @@ func (e *Kucoin) Recv() {
 			}
 		}
 	}
+}
+
+func (e *Kucoin) applyForInstanceServer() error {
+	resp, err := http.Post("https://api.kucoin.com/api/v1/bullet-public", "", nil)
+	e.logger.Debug("applying for instance server token")
+	if err != nil {
+		e.logger.Warn("Could not generate Kucoin Websocket URL", err)
+		return err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		e.logger.Warn("Could not generate Kucoin Websocket URL", err)
+		return err
+	}
+
+	var httpResponse kucoinHttpResponse
+	json.Unmarshal(body, &httpResponse)
+
+	base := httpResponse.Data.InstanceServers[0].Endpoint
+	token := httpResponse.Data.Token
+
+	e.url = fmt.Sprintf("%s?token=%s", base, token)
+	e.pingInterval = httpResponse.Data.InstanceServers[0].PingInterval
+	e.logger.Debug("granted instance server token")
+	return nil
 }
 
 func (e *Kucoin) Updates() chan MarketUpdate {

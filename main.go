@@ -23,9 +23,11 @@ func main() {
 		return
 	}
 
-	pair := symbolManager.GetCurrencyPair("ETH", "USDT")
+	pair := symbolManager.GetCurrencyPair("BTC", "USDT")
+	fmt.Println(pair.BinanceUS)
 
 	agg := aggregator.New(
+		exchange.NewBinanceUS(pair),
 		exchange.NewBitstamp(pair),
 		exchange.NewCoinbase(pair),
 		exchange.NewCryptoCom(pair),

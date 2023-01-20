@@ -1,3 +1,5 @@
+// Aggreagate top of book updates from a currency pair listed on Bitstamp
+
 package exchange
 
 import (

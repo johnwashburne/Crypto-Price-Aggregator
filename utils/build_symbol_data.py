@@ -103,6 +103,20 @@ def get_bitstamp_symbols() -> List[Symbol]:
 
     return res
 
+def get_binance_us_symbols() -> List[Symbol]:
+    response = requests.get("https://api.binance.us/api/v3/exchangeInfo")
+    res = []
+
+    for instrument in tqdm(response.json()['symbols']):
+        res.append(Symbol(
+            instrument['symbol'].lower(),
+            instrument['baseAsset'],
+            instrument['quoteAsset']
+        ))
+
+    return res
+
+
 def add_symbols(
         curr_symbols: dict, 
         new_symbols: List[Symbol], 
@@ -122,13 +136,14 @@ def add_symbols(
 
 if __name__ == "__main__":
     
-    symbols = {}
+    symbols = {}    
     
     add_symbols(symbols, get_bitstamp_symbols(), "Bitstamp")
     add_symbols(symbols, get_gemini_symbols(), "Gemini")
     add_symbols(symbols, get_crypto_com_symbols(), "Crypto.com")
     add_symbols(symbols, get_coinbase_symbols(), "Coinbase")
     add_symbols(symbols, get_kucoin_symbols(), "Kucoin")
+    add_symbols(symbols, get_binance_us_symbols(), "Binance.US")
 
-    with open("../symbol/symbol_database.json", 'w') as f:
+    with open("../pkg/symbol/symbol_database.json", 'w') as f:
         json.dump(symbols, f)

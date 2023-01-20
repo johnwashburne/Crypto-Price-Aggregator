@@ -1,3 +1,7 @@
+// A symbol manager to account for variations in how various cryptocurrency are referenced
+// across different exchanges
+// Currently using a naive local json implementation
+
 package symbol
 
 import (
@@ -11,6 +15,7 @@ type SymbolManager interface {
 }
 
 type CurrencyPair struct {
+	BinanceUS string `json:"Binance.US"`
 	Bitstamp  string `json:"Bitstamp"`
 	Coinbase  string `json:"Coinbase"`
 	CryptoCom string `json:"Crypto.com"`
@@ -23,6 +28,7 @@ type JsonManager struct {
 	data map[string]map[string]CurrencyPair
 }
 
+// Load symbol data from the local json file
 func LoadJsonSymbolData() (*JsonManager, error) {
 	jsonFile, err := os.Open("./pkg/symbol/symbol_database.json")
 	if err != nil {
@@ -42,6 +48,7 @@ func LoadJsonSymbolData() (*JsonManager, error) {
 	}, nil
 }
 
+// Get a currency pair from the json SymbolManager implementation
 func (j *JsonManager) GetCurrencyPair(baseCurrency string, quoteCurrency string) CurrencyPair {
 	return j.data[baseCurrency][quoteCurrency]
 }
