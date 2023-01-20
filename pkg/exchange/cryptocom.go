@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/logger"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/ws"
-	"go.uber.org/zap"
 )
 
 // message method for heartbeat response
@@ -19,7 +19,7 @@ type CryptoCom struct {
 	name    string
 	symbol  string
 	valid   bool
-	logger  *zap.SugaredLogger
+	logger  *logger.Logger
 }
 
 // create new Crypto.com struct
@@ -33,14 +33,14 @@ func NewCryptoCom(pair symbol.CurrencyPair) *CryptoCom {
 		name:    name,
 		symbol:  pair.CryptoCom,
 		valid:   pair.CryptoCom != "",
-		logger:  zap.S().Named(name),
+		logger:  logger.Named(name),
 	}
 }
 
 // Receive book data from Crypto.com, send any top of book updates
 // over the updates channel as a MarketUpdate struct
 func (e *CryptoCom) Recv() {
-	e.logger.Debugf("connecting to socket")
+	e.logger.Debug("connecting to socket")
 	conn := ws.New(e.url)
 
 	conn.SetOnConnect(func(c *ws.Client) error {

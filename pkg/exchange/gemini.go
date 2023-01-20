@@ -3,9 +3,9 @@ package exchange
 import (
 	"fmt"
 
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/logger"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/ws"
-	"go.uber.org/zap"
 )
 
 type Gemini struct {
@@ -14,7 +14,7 @@ type Gemini struct {
 	name    string
 	symbol  string
 	valid   bool
-	logger  *zap.SugaredLogger
+	logger  *logger.Logger
 }
 
 // Create new Gemini struct
@@ -28,17 +28,17 @@ func NewGemini(pair symbol.CurrencyPair) *Gemini {
 		name:    name,
 		symbol:  pair.Gemini,
 		valid:   pair.Gemini != "",
-		logger:  zap.S().Named(name),
+		logger:  logger.Named(name),
 	}
 }
 
 // Receive book data from Gemini, send any top of book updates
 // over the updates channel as a MarketUpdate struct
 func (e *Gemini) Recv() {
-	e.logger.Debugf("connecting to socket")
+	e.logger.Debug("connecting to socket")
 	conn := ws.New(e.url)
 	if err := conn.Connect(); err != nil {
-		e.logger.Infof("could not connect to socket")
+		e.logger.Info("could not connect to socket")
 		return
 	}
 	e.logger.Debug("connected to socket")

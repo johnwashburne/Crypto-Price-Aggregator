@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/logger"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/ws"
-	"go.uber.org/zap"
 )
 
 type Kucoin struct {
@@ -19,23 +19,25 @@ type Kucoin struct {
 	url          string
 	valid        bool
 	pingInterval int
-	logger       *zap.SugaredLogger
+	logger       *logger.Logger
 }
 
 func NewKucoin(pair symbol.CurrencyPair) *Kucoin {
 	c := make(chan MarketUpdate, updateBufSize)
 	s := pair.Kucoin
 	name := fmt.Sprintf("Kucoin: %s", pair.Kucoin)
-	logger := zap.S().Named(name)
+	logger := logger.Named(name)
 
 	resp, err := http.Post("https://api.kucoin.com/api/v1/bullet-public", "", nil)
 	if err != nil {
-		logger.Panic("Could not generate Kucoin Websocket URL", err)
+		logger.Warn("Could not generate Kucoin Websocket URL", err)
+		return nil
 	}
 	defer resp.Body.Close()
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		logger.Panic("Could not generate Kucoin Websocket URL", err)
+		logger.Warn("Could not generate Kucoin Websocket URL", err)
+		return nil
 	}
 
 	var httpResponse kucoinHttpResponse

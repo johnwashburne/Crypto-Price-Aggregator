@@ -7,14 +7,13 @@ import (
 
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/aggregator"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/exchange"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/logger"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/symbol"
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
 
 func main() {
 
-	initLogger()
+	logger.CreateLogger()
 
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
@@ -24,7 +23,7 @@ func main() {
 		return
 	}
 
-	pair := symbolManager.GetCurrencyPair("ETH", "USD")
+	pair := symbolManager.GetCurrencyPair("ETH", "USDT")
 
 	agg := aggregator.New(
 		exchange.NewBitstamp(pair),
@@ -46,29 +45,5 @@ func main() {
 			return
 		}
 	}
-
-}
-
-func initLogger() {
-	// set up logging
-	logger, _ := zap.Config{
-		Encoding:    "json",
-		Level:       zap.NewAtomicLevelAt(zapcore.DebugLevel),
-		OutputPaths: []string{"logs/logs.txt"},
-		EncoderConfig: zapcore.EncoderConfig{
-			MessageKey: "message", // <--
-			NameKey:    "name",
-
-			TimeKey:    "time",
-			EncodeTime: zapcore.ISO8601TimeEncoder,
-
-			CallerKey:    "caller",
-			EncodeCaller: zapcore.ShortCallerEncoder,
-
-			LevelKey:    "level",
-			EncodeLevel: zapcore.CapitalLevelEncoder,
-		},
-	}.Build()
-	zap.ReplaceGlobals(logger)
 
 }

@@ -2,7 +2,7 @@ package aggregator
 
 import (
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/exchange"
-	"go.uber.org/zap"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/logger"
 )
 
 type BestPrice struct {
@@ -17,7 +17,7 @@ type BestPrice struct {
 type Aggregator struct {
 	updates   chan BestPrice
 	exchanges []exchange.Exchange
-	logger    *zap.SugaredLogger
+	logger    *logger.Logger
 }
 
 // Create a new aggregator struct
@@ -26,7 +26,7 @@ func New(exchanges ...exchange.Exchange) Aggregator {
 	return Aggregator{
 		updates:   c,
 		exchanges: exchanges,
-		logger:    zap.S().Named("Aggregator"),
+		logger:    logger.Named("Aggregator"),
 	}
 }
 

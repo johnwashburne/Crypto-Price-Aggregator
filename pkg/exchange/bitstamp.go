@@ -3,9 +3,9 @@ package exchange
 import (
 	"fmt"
 
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/logger"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/ws"
-	"go.uber.org/zap"
 )
 
 type Bitstamp struct {
@@ -14,7 +14,7 @@ type Bitstamp struct {
 	name    string
 	symbol  string
 	valid   bool
-	logger  *zap.SugaredLogger
+	logger  *logger.Logger
 }
 
 func NewBitstamp(pair symbol.CurrencyPair) *Bitstamp {
@@ -27,7 +27,7 @@ func NewBitstamp(pair symbol.CurrencyPair) *Bitstamp {
 		symbol:  pair.Bitstamp,
 		name:    name,
 		valid:   pair.Bitstamp != "",
-		logger:  zap.S().Named(name),
+		logger:  logger.Named(name),
 	}
 }
 

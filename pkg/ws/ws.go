@@ -3,7 +3,7 @@ package ws
 import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/gorilla/websocket"
-	"go.uber.org/zap"
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/logger"
 )
 
 type Client struct {
@@ -11,14 +11,14 @@ type Client struct {
 	conn          *websocket.Conn
 	backoff       backoff.BackOff
 	onConnectFunc func(c *Client) error
-	logger        *zap.SugaredLogger
+	logger        *logger.Logger
 }
 
 func New(url string) *Client {
 	return &Client{
 		url:     url,
 		backoff: backoff.WithMaxRetries(backoff.NewExponentialBackOff(), 10),
-		logger:  zap.S().Named("Websocket Client"),
+		logger:  logger.Named("Websocket Client"),
 	}
 }
 

@@ -3,9 +3,9 @@ package exchange
 import (
 	"fmt"
 
+	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/logger"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/symbol"
 	"github.com/johnwashburne/Crypto-Price-Aggregator/pkg/ws"
-	"go.uber.org/zap"
 )
 
 type Coinbase struct {
@@ -14,7 +14,7 @@ type Coinbase struct {
 	name    string
 	url     string
 	valid   bool
-	logger  *zap.SugaredLogger
+	logger  *logger.Logger
 }
 
 func NewCoinbase(pair symbol.CurrencyPair) *Coinbase {
@@ -27,7 +27,7 @@ func NewCoinbase(pair symbol.CurrencyPair) *Coinbase {
 		name:    name,
 		url:     "wss://ws-feed.exchange.coinbase.com",
 		valid:   pair.Coinbase != "",
-		logger:  zap.S().Named(name),
+		logger:  logger.Named(name),
 	}
 }
 
@@ -35,7 +35,7 @@ func NewCoinbase(pair symbol.CurrencyPair) *Coinbase {
 // over the updates channel as a MarketUpdate struct
 func (e *Coinbase) Recv() {
 	// connect to websocket
-	e.logger.Debugf("connecting to socket")
+	e.logger.Debug("connecting to socket")
 	conn := ws.New(e.url)
 
 	conn.SetOnConnect(func(c *ws.Client) error {
