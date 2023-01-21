@@ -48,6 +48,7 @@ func (e *Bitstamp) Recv() {
 		})
 
 		if err != nil {
+			e.logger.Info(err)
 			return err
 		}
 
@@ -56,7 +57,7 @@ func (e *Bitstamp) Recv() {
 	})
 
 	if err := conn.Connect(); err != nil {
-		e.logger.Warn("Could not connect to socket")
+		e.logger.Warn("Could not connect to socket, RETURNING")
 		return
 	}
 	e.logger.Debug("connected to socket")
@@ -65,7 +66,7 @@ func (e *Bitstamp) Recv() {
 	for {
 		var message bitstampOrderBook
 		if err := conn.ReadJSON(&message); err != nil {
-			e.logger.Warn(err)
+			e.logger.Warn(err, " RETURNING")
 			return
 		}
 

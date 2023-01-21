@@ -40,7 +40,7 @@ func (e *Gemini) Recv() {
 	e.logger.Debug("connecting to socket")
 	conn := ws.New(e.url)
 	if err := conn.Connect(); err != nil {
-		e.logger.Info("could not connect to socket")
+		e.logger.Warn("could not connect to socket, RETURNING")
 		return
 	}
 	e.logger.Debug("connected to socket")
@@ -52,7 +52,7 @@ func (e *Gemini) Recv() {
 	for {
 		var message geminiMessage
 		if err := conn.ReadJSON(&message); err != nil {
-			e.logger.Warn(err)
+			e.logger.Warn(err, " RETURNING")
 			continue
 		}
 

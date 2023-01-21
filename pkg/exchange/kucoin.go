@@ -40,6 +40,7 @@ func NewKucoin(pair symbol.CurrencyPair) *Kucoin {
 
 	if err := k.applyForInstanceServer(); err != nil {
 		k.valid = false
+		logger.Warn(err)
 	}
 
 	return k
@@ -55,7 +56,12 @@ func (e *Kucoin) Recv() {
 		var welcomeMessage kucoinMessage
 		if err := c.ReadJSON(&welcomeMessage); err != nil {
 			// if error in connection, apply for new token
-			e.applyForInstanceServer()
+			if err := e.applyForInstanceServer(); err != nil {
+				e.logger.Warn(err)
+				return err
+			}
+
+			e.logger.Warn(err)
 			return err
 		}
 
@@ -85,7 +91,7 @@ func (e *Kucoin) Recv() {
 	})
 
 	if err := conn.Connect(); err != nil {
-		e.logger.Warn("could not connect to socket")
+		e.logger.Warn("could not connect to socket, RETURNING")
 		return
 	}
 	e.logger.Debug("connected to socket")
@@ -136,7 +142,7 @@ func (e *Kucoin) Recv() {
 
 func (e *Kucoin) applyForInstanceServer() error {
 	resp, err := http.Post("https://api.kucoin.com/api/v1/bullet-public", "", nil)
-	e.logger.Debug("applying for instance server token")
+	e.logger.Info("applying for instance server token")
 	if err != nil {
 		e.logger.Warn("Could not generate Kucoin Websocket URL", err)
 		return err
@@ -156,7 +162,7 @@ func (e *Kucoin) applyForInstanceServer() error {
 
 	e.url = fmt.Sprintf("%s?token=%s", base, token)
 	e.pingInterval = httpResponse.Data.InstanceServers[0].PingInterval
-	e.logger.Debug("granted instance server token")
+	e.logger.Info("granted instance server token ", token)
 	return nil
 }
 

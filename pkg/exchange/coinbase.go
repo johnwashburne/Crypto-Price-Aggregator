@@ -55,6 +55,7 @@ func (e *Coinbase) Recv() {
 		// confirm accurate subscription
 		var resp coinbaseSubscriptionResponse
 		if err := conn.ReadJSON(&resp); err != nil {
+			e.logger.Info(err)
 			return err
 		}
 
@@ -62,7 +63,7 @@ func (e *Coinbase) Recv() {
 	})
 
 	if err := conn.Connect(); err != nil {
-		e.logger.Warn("could not connect to socket")
+		e.logger.Warn("could not connect to socket, RETURNING")
 		return
 	}
 	e.logger.Debug("connected to socket")
@@ -70,8 +71,8 @@ func (e *Coinbase) Recv() {
 	for {
 		var message coinbaseMessage
 		if err := conn.ReadJSON(&message); err != nil {
-			e.logger.Info(err)
-			continue
+			e.logger.Warn(err, ", RETURNING")
+			return
 		}
 
 		e.updates <- MarketUpdate{

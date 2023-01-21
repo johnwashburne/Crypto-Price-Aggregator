@@ -32,7 +32,7 @@ func (c *Client) Connect() error {
 
 func (c *Client) connect() func() error {
 	return func() error {
-		c.logger.Debug("attempting connection to ", c.url)
+		c.logger.Info("attempting connection to ", c.url)
 		conn, _, err := websocket.DefaultDialer.Dial(c.url, nil)
 		if err != nil {
 			return err
@@ -40,13 +40,13 @@ func (c *Client) connect() func() error {
 
 		c.conn = conn
 		if c.onConnectFunc != nil {
-			c.logger.Debug("sending startup messages ", c.url)
+			c.logger.Info("sending startup messages ", c.url)
 			if err := c.onConnectFunc(c); err != nil {
 				return err
 			}
 		}
 
-		c.logger.Debug("connection established: ", c.url)
+		c.logger.Info("connection established: ", c.url)
 		return nil
 	}
 }
@@ -65,6 +65,7 @@ func (c *Client) SetOnConnect(onConnect func(c *Client) error) {
 
 func (c *Client) ReadJSON(v interface{}) error {
 	if err := c.conn.ReadJSON(v); err != nil {
+		c.logger.Info(err, c.url)
 		if err := c.reconnect(); err != nil {
 			return err
 		}
@@ -77,6 +78,7 @@ func (c *Client) ReadJSON(v interface{}) error {
 
 func (c *Client) WriteJSON(v interface{}) error {
 	if err := c.conn.WriteJSON(v); err != nil {
+		c.logger.Info(err, c.url)
 		if err := c.reconnect(); err != nil {
 			return err
 		}
@@ -90,6 +92,7 @@ func (c *Client) WriteJSON(v interface{}) error {
 func (c *Client) ReadMessage() (int, []byte, error) {
 	messageType, p, err := c.conn.ReadMessage()
 	if err != nil {
+		c.logger.Info(err, c.url)
 		if err := c.reconnect(); err != nil {
 			return 0, nil, err
 		}

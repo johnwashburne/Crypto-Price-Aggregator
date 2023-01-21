@@ -35,7 +35,7 @@ func (e *BinanceUS) Recv() {
 	e.logger.Debug("connecting to socket")
 	conn := ws.New(e.url)
 	if err := conn.Connect(); err != nil {
-		e.logger.Info("could not connect to socket")
+		e.logger.Warn("could not connect to socket, RETURNING")
 		return
 	}
 	e.logger.Debug("connected to socket")

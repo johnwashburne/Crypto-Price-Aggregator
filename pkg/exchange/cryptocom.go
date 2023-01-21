@@ -49,7 +49,10 @@ func (e *CryptoCom) Recv() {
 		c.WriteJSON(buildCryptoComSubscription(e.symbol))
 
 		var resp cryptoComSubscriptionResponse
-		conn.ReadJSON(&resp)
+		if err := conn.ReadJSON(&resp); err != nil {
+			e.logger.Info(err)
+			return err
+		}
 
 		if resp.Method != "subscribe" || resp.Code != 0 {
 			return errors.New(fmt.Sprint(e.name, "could not subscribe"))
@@ -59,7 +62,7 @@ func (e *CryptoCom) Recv() {
 	})
 
 	if err := conn.Connect(); err != nil {
-		e.logger.Warn("could not connect to socket")
+		e.logger.Warn("could not connect to socket, RETURNING")
 		return
 	}
 	e.logger.Debug("connected to socket")

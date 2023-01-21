@@ -24,7 +24,7 @@ func CreateLogger() error {
 	// set up logging
 	zapLogger, err := zap.Config{
 		Encoding:    "json",
-		Level:       zap.NewAtomicLevelAt(zapcore.DebugLevel),
+		Level:       zap.NewAtomicLevelAt(zapcore.InfoLevel),
 		OutputPaths: []string{"logs/logs.txt"},
 		EncoderConfig: zapcore.EncoderConfig{
 			MessageKey: "message", // <--
